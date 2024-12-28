@@ -42,21 +42,21 @@ public class App extends Application {
         root.setPrefSize(2 * VisualConstants.X_OFFSET + VisualConstants.TILE_SIZE * BoardConstants.SIZE,
                 2 * VisualConstants.Y_OFFSET + VisualConstants.TILE_SIZE * BoardConstants.SIZE);
         root.getChildren().addAll(tileGroup, litSquaresGroup, pieceGroup);
-        root.setBackground(
-                new Background(new BackgroundFill(VisualConstants.BACKGROUND1, null, null)));
+        root.setBackground(new Background(new BackgroundFill(VisualConstants.BACKGROUND1, null, null)));
 
         for (int row = 0; row < BoardConstants.SIZE; row++) {
             for (int col = 0; col < BoardConstants.SIZE; col++) {
-                viChessTile tile = new viChessTile((row + col) % 2 == 0, col, row); // its supposed to be col then row
+                int visualX = boardXtoVisual(row, col);
+                int visualY = boardYtoVisual(row, col);
+
+                viChessTile tile = new viChessTile((row + col) % 2 == 0, visualX, visualY);
                 tileGroup.getChildren().add(tile);
 
-                viLitTile litTile = new viLitTile(boardXToPixel(row, col),
-                        boardYToPixel(row, col));
+                viLitTile litTile = new viLitTile(visualX, visualY);
                 litSquaresBoard[row][col] = litTile;
                 litSquaresGroup.getChildren().add(litTile);
 
-                viPiece viPiece = new viPiece(board.getPiece(row, col), boardXToPixel(row, col),
-                        boardYToPixel(row, col));
+                viPiece viPiece = new viPiece(board.getPiece(row, col), visualX, visualY);
                 if (viPiece.getPiece() != null) {
                     pieceGroup.getChildren().add(viPiece);
 
@@ -74,9 +74,10 @@ public class App extends Application {
             System.out.println("Mouse clicked at: " + viPiece.getPiece().getX() + ", " + viPiece.getPiece().getY());
 
             litSquares = board.getMoves(viPiece.getPiece(), litSquares);
+            System.out.println(litSquares.size());
 
             for (Move move : litSquares) {
-                System.out.print("i ");
+
                 litSquaresBoard[move.getEndX()][move.getEndY()].activate(true);
             }
 
@@ -93,23 +94,29 @@ public class App extends Application {
         viPiece.setOnMouseReleased(e -> {
             System.out.println("Mouse released");
 
+            for (Move move : litSquares) {
+
+                litSquaresBoard[move.getEndX()][move.getEndY()].activate(false);
+            }
+            litSquares.clear();
+
         });
     }
 
-    private int boardXToPixel(int x, int y) {
-        return y;
-    }
-
-    private int boardYToPixel(int x, int y) {
-        return BoardConstants.SIZE - 1 - x;
-    }
-
     private int pixelYToBoard(double x, double y) {
-        return BoardConstants.SIZE - (int) (Math.floor(y / VisualConstants.TILE_SIZE));
+        return BoardConstants.SIZE - (int) (Math.floor(x / VisualConstants.TILE_SIZE));
     }
 
     private int pixelXToBoard(double x, double y) {
         return (int) (Math.floor(x / VisualConstants.TILE_SIZE)) - 1;
+    }
+
+    private int boardXtoVisual(int x, int y) {
+        return y;
+    }
+
+    private int boardYtoVisual(int x, int y) {
+        return BoardConstants.SIZE - 1 - x;
     }
 
 }
