@@ -5,9 +5,9 @@ import Constants.BoardConstants;
 import Constants.VisualConstants;
 import GameplayLogic.Board;
 import GameplayLogic.Move;
+import GameplayLogic.Pieces.Piece;
 import VisualLogic.viChessTile;
 import VisualLogic.viLitTile;
-import VisualLogic.viPiece;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -21,7 +21,6 @@ public class App extends Application {
     private Group tileGroup = new Group();
 
     private Group pieceGroup = new Group();
-    private viPiece viPieceBoard[][] = new viPiece[BoardConstants.SIZE][BoardConstants.SIZE];
 
     private ArrayList<Move> litSquares = new ArrayList<Move>();
     private Group litSquaresGroup = new Group();
@@ -58,12 +57,12 @@ public class App extends Application {
                 litSquaresBoard[row][col] = litTile;
                 litSquaresGroup.getChildren().add(litTile);
 
-                viPiece viPiece = new viPiece(board.getPiece(row, col), visualX, visualY);
-                viPieceBoard[row][col] = viPiece;
-                if (viPiece.getPiece() != null) {
-                    pieceGroup.getChildren().add(viPiece);
+                Piece piece = board.getPiece(row, col);
+                if (piece != null) {
+                    pieceGroup.getChildren().add(piece);
+                    piece.relocatePiece(boardXtoVisual(row, col), boardYtoVisual(row, col));
 
-                    doPieceVisuals(viPiece);
+                    doPieceVisuals(piece);
                 }
 
             }
@@ -72,26 +71,24 @@ public class App extends Application {
         return root;
     }
 
-    private void doPieceVisuals(viPiece viPiece) {
-        doOnMousePressed(viPiece);
-        doOnMouseDragged(viPiece);
-        doOnMouseReleased(viPiece);
+    private void doPieceVisuals(Piece piece) {
+        doOnMousePressed(piece);
+        doOnMouseDragged(piece);
+        doOnMouseReleased(piece);
     }
 
-    private void doOnMousePressed(viPiece viPiece) {
-        viPiece.setOnMousePressed(e -> {
-            System.out.println("Mouse clicked at: " + viPiece.getPiece().getX() + ", " + viPiece.getPiece().getY());
+    private void doOnMousePressed(Piece piece) {
+        piece.setOnMousePressed(e -> {
+            System.out.println("Mouse clicked at: " + piece.getX() + ", " + piece.getY());
 
-            if (board.getPiece(viPiece.getPiece().getX(), viPiece.getPiece().getY()) != viPiece.getPiece()) {
-                if (board.getPiece(viPiece.getPiece().getX(), viPiece.getPiece().getY()) == null) {
+            if (board.getPiece(piece.getX(), piece.getY()) != piece) {
+                if (board.getPiece(piece.getX(), piece.getY()) == null) {
                     System.out.println("no board piece");
-                } else if (viPiece.getPiece() == null) {
-                    System.out.println("no visual piece");
                 }
                 System.out.println("Ruh oh, boards !=");
             }
 
-            litSquares = board.getMoves(viPiece.getPiece(), litSquares);
+            litSquares = board.getMoves(piece, litSquares);
 
             for (Move move : litSquares) {
 
@@ -101,15 +98,15 @@ public class App extends Application {
         });
     }
 
-    private void doOnMouseDragged(viPiece viPiece) {
-        viPiece.setOnMouseDragged(e -> {
-            viPiece.relocate(boardSnapX(e.getSceneX(), e.getSceneY()),
+    private void doOnMouseDragged(Piece piece) {
+        piece.setOnMouseDragged(e -> {
+            piece.relocate(boardSnapX(e.getSceneX(), e.getSceneY()),
                     (boardSnapY(e.getSceneX(), e.getSceneY())));
         });
     }
 
-    private void doOnMouseReleased(viPiece viPiece) {
-        viPiece.setOnMouseReleased(e -> {
+    private void doOnMouseReleased(Piece piece) {
+        piece.setOnMouseReleased(e -> {
             System.out.println("Mouse released");
 
             for (Move move : litSquares) {
@@ -118,7 +115,7 @@ public class App extends Application {
             }
             litSquares.clear();
 
-            movePiece(viPiece, boardSnapX(e.getSceneX(), e.getSceneY()),
+            movePiece(piece, boardSnapX(e.getSceneX(), e.getSceneY()),
                     boardSnapY(e.getSceneX(), e.getSceneY()));
 
         });
@@ -148,24 +145,20 @@ public class App extends Application {
         return BoardConstants.SIZE - 1 - (int) (pixelY - VisualConstants.Y_OFFSET) / VisualConstants.TILE_SIZE;
     }
 
-    private void movePiece(viPiece viPiece, int pixelX, int pixelY) {
+    private void movePiece(Piece piece, int pixelX, int pixelY) {
         int newX = pixelXToBoard(pixelX, pixelY);
         int newY = pixelYToBoard(pixelX, pixelY);
-        int oldX = viPiece.getPiece().getX();
-        int oldY = viPiece.getPiece().getY();
+        int oldX = piece.getX();
+        int oldY = piece.getY();
 
         if (board.isWithinBoard(newX, newY)) {
-            viPiece targetPiece = viPieceBoard[newX][newY];
+            Piece targetPiece = board.getPiece(newX, newY);
             if (!board.movePiece(oldX, oldY, newX, newY)) {
-                viPiece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY)); // TODO issues arrising
-                                                                                               // to due with not
-                                                                                               // updating viBoard,
-                                                                                               // should i just move it
-                                                                                               // into onie
+                piece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
                 System.out.println("Not moved");
 
             } else {
-                if (targetPiece.getPiece() != null) {
+                if (targetPiece != null) {
                     deletePiece(targetPiece);
                     System.out.println("Captured");
                 } else {
@@ -173,13 +166,13 @@ public class App extends Application {
                 }
             }
         } else {
-            viPiece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
+            piece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
             System.out.println("Not moved");
         }
 
     }
 
-    private void deletePiece(viPiece piece) {
+    private void deletePiece(Piece piece) {
         piece.relocate(0, 0);
         piece.setVisible(false);
         piece = null;

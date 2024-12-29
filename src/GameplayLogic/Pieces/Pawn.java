@@ -1,6 +1,7 @@
 package GameplayLogic.Pieces;
 
 import Constants.BoardConstants;
+import javafx.scene.image.Image;
 
 public class Pawn extends Piece {
     boolean isPassentable;
@@ -47,5 +48,13 @@ public class Pawn extends Piece {
 
     public void setPassentable(boolean passentable) {
         isPassentable = passentable;
+    }
+
+    public Image getImage() {
+        if (isWhite) {
+            return new Image("\\PieceImages\\White_Pawn.png");
+        } else {
+            return new Image("\\PieceImages\\Black_Pawn.png");
+        }
     }
 }
