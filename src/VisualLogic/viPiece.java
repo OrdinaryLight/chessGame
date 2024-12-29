@@ -14,13 +14,13 @@ import javafx.scene.layout.StackPane;
 
 public class viPiece extends StackPane {
     private Piece piece;
-    private int oldX;
-    private int oldY;
+    private int x;
+    private int y;
 
     public viPiece(Piece piece, int x, int y) {
         this.piece = piece;
-        oldX = x * VisualConstants.TILE_SIZE;
-        oldY = y * VisualConstants.Y_OFFSET;
+        this.x = x;
+        this.y = y;
 
         ImageView image = new ImageView();
 
@@ -28,9 +28,13 @@ public class viPiece extends StackPane {
         image.setFitWidth(VisualConstants.TILE_SIZE);
         image.setFitHeight(VisualConstants.TILE_SIZE);
         getChildren().add(image);
-        relocate(VisualConstants.X_OFFSET + oldX,
-                VisualConstants.Y_OFFSET + oldY);
+        relocatePiece(x, y);
 
+    }
+
+    public void relocatePiece(int x, int y) {
+        relocate(VisualConstants.X_OFFSET + x * VisualConstants.TILE_SIZE,
+                VisualConstants.Y_OFFSET + y * VisualConstants.TILE_SIZE);
     }
 
     private Image getImage(Piece piece) {

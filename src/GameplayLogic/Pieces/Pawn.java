@@ -13,42 +13,30 @@ public class Pawn extends Piece {
     public boolean isValidMove(int newX, int newY) {
         int direction;
         int dx = Math.abs(x - newX);
+        int sdy = newY - y;
         int doubleMoveSquare;
 
-        if (!inBounds(newX, newY)) {
-            return false;
-        }
-
-        if (dx > 1) {
+        if (!inBounds(newX, newY) || dx > 1) {
             return false;
         }
 
         if (isWhite) {
-            direction = -1;
-        } else {
             direction = 1;
-        }
-
-        // potential capture
-        if (dx == 1 && y + direction == newY) {
-            return true;
-        }
-
-        // one square moved
-        if (y + direction == newY) {
-            return true;
-        }
-
-        if (isWhite) {
             doubleMoveSquare = 1;
         } else {
+            direction = -1;
             doubleMoveSquare = BoardConstants.SIZE - 2;
         }
 
-        // two squares moved.
-        if ((y + 2 * direction == newY && y == doubleMoveSquare)) {
+        // one square moved
+        if (sdy == direction) {
             return true;
         }
+        // two squares moved.
+        if (dx == 0 && y + 2 * direction == newY && y == doubleMoveSquare) {
+            return true;
+        }
+        // dx == 1
 
         return false;
     }

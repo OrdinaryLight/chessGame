@@ -13,8 +13,8 @@ public class viLitTile extends Rectangle {
                 VisualConstants.Y_OFFSET + y * VisualConstants.TILE_SIZE);
 
         // setFill(VisualConstants.LIT1);
-        setFill(VisualConstants.BLACK);
-        setOpacity(1);
+        setFill(VisualConstants.LIT1);
+        setOpacity(VisualConstants.LIT_OPACITY);
         setVisible(false);
     }
 

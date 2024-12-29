@@ -23,28 +23,27 @@ public class Board {
     private void initializeBoard() {
         // Setup white pieces
         board[0][0] = new Rook(0, 0, true);
-        board[0][1] = new Knight(0, 1, true);
-        board[0][2] = new Bishop(0, 2, true);
-        board[0][3] = new Queen(0, 3, true);
-        board[0][4] = new King(0, 4, true);
-        board[0][5] = new Bishop(0, 5, true);
-        board[0][6] = new Knight(0, 6, true);
-        board[0][7] = new Rook(0, 7, true);
+        board[0][1] = new Knight(1, 0, true);
+        board[0][2] = new Bishop(2, 0, true);
+        board[0][3] = new Queen(3, 0, true);
+        board[0][4] = new King(4, 0, true);
+        board[0][5] = new Bishop(5, 0, true);
+        board[0][6] = new Knight(6, 0, true);
+        board[0][7] = new Rook(7, 0, true);
         // for (int i = 0; i < BoardConstants.SIZE; i++) {
         // board[i][1] = new Pawn(1, i, true);
-        // }
-
+        // }7
         // Setup black pieces
-        board[7][0] = new Rook(7, 0, false);
-        board[7][1] = new Knight(7, 1, false);
-        board[7][2] = new Bishop(7, 2, false);
-        board[7][3] = new Queen(7, 3, false);
-        board[7][4] = new King(7, 4, false);
-        board[7][5] = new Bishop(7, 5, false);
-        board[7][6] = new Knight(7, 6, false);
+        board[7][0] = new Rook(0, 7, false);
+        board[7][1] = new Knight(1, 7, false);
+        board[7][2] = new Bishop(2, 7, false);
+        board[7][3] = new Queen(3, 7, false);
+        board[7][4] = new King(4, 7, false);
+        board[7][5] = new Bishop(5, 7, false);
+        board[7][6] = new Knight(6, 7, false);
         board[7][7] = new Rook(7, 7, false);
         for (int i = 0; i < BoardConstants.SIZE; i++) {
-            board[6][i] = new Pawn(6, i, false);
+            board[6][i] = new Pawn(i, 6, false);
         }
     }
 
@@ -54,8 +53,8 @@ public class Board {
             return false;
         }
 
-        Piece piece = board[startX][startY];
-        Piece targetPiece = board[endX][endY];
+        Piece piece = getPiece(startX, startY);
+        Piece targetPiece = getPiece(endX, endY);
 
         if (piece == null || !piece.isValidMove(endX, endY)) {
             return false;
@@ -67,8 +66,9 @@ public class Board {
         }
 
         // Execute the move
-        board[endX][endY] = piece;
-        board[startX][startY] = null;
+        board[endY][endX] = piece;
+        board[startY][startX] = null;
+
         piece.setX(endX);
         piece.setY(endY);
 
@@ -77,8 +77,8 @@ public class Board {
 
     // Sets a piece to a position and changes the pieces position
     public Piece setPiece(int x, int y, Piece piece) {
-        Piece oldPiece = board[x][y];
-        board[x][y] = piece;
+        Piece oldPiece = getPiece(x, y);
+        board[y][x] = piece;
 
         if (piece != null) {
             piece.setX(x);
@@ -89,11 +89,11 @@ public class Board {
     }
 
     public Piece getPiece(int x, int y) {
-        return board[x][y];
+        return board[y][x];
     }
 
     // checks if a position is in bounds
-    private boolean isWithinBoard(int x, int y) {
+    public boolean isWithinBoard(int x, int y) {
         return (x >= 0 && x < BoardConstants.SIZE) && (y >= 0 && y < BoardConstants.SIZE);
     }
 
@@ -123,22 +123,23 @@ public class Board {
 
         if ((piece instanceof Bishop || piece instanceof Queen) && (dx == dy)) {
             for (int i = 1; i < Math.abs(dx); i++) {
-                if (board[x + i * dirX][y + i * dirY] != null) {
+                if (getPiece(x + i * dirX, y + i * dirY) != null) {
                     return false; // Obstructed
                 }
             }
+
         }
 
         if ((piece instanceof Rook || piece instanceof Queen) && (dx == 0 || dy == 0)) {
             if (dx == 0) {
                 for (int i = Math.min(y, newY) + 1; i < Math.max(y, newY); i++) {
-                    if (board[x][i] != null) {
+                    if (getPiece(x, y + dirY * i) != null) {
                         return false; // Obstructed
                     }
                 }
             } else {
                 for (int i = Math.min(x, newX) + 1; i < Math.max(x, newX); i++) {
-                    if (board[i][y] != null) {
+                    if (getPiece(x + dirX * i, y) != null) {
                         return false; // Obstructed
                     }
                 }
@@ -146,22 +147,6 @@ public class Board {
         }
 
         return true;
-    }
-
-    // Print the board for testing
-    public void printBoard() {
-        for (int i = 0; i < BoardConstants.SIZE; i++) {
-            for (int j = 0; j < BoardConstants.SIZE; j++) {
-                Piece piece = board[i][j];
-                if (piece == null) {
-                    System.out.print(".");
-                } else {
-                    // prints the First Letter of the piece
-                    System.out.print(piece.getClass().getSimpleName().charAt(0));
-                }
-            }
-            System.out.println();
-        }
     }
 
     public boolean isKingInCheck(boolean isWhiteTurn) {
@@ -177,10 +162,9 @@ public class Board {
             int kingY = king.getY();
             for (int x = 0; x < BoardConstants.SIZE; x++) {
                 for (int y = 0; y < BoardConstants.SIZE; y++) {
-                    Piece piece = board[x][y];
+                    Piece piece = getPiece(x, y);
                     if (piece != null && piece.isWhite() != isWhiteTurn && piece.isValidMove(kingX, kingY)
-                            && isPathClear(piece, kingX, kingY)) { // TODO they got vision through walls (check if
-                                                                   // bishop, rook, queen)
+                            && isPathClear(piece, kingX, kingY)) {
                         return true;
                     }
                 }
@@ -194,7 +178,7 @@ public class Board {
         ArrayList<Move> legalMoves = new ArrayList<>();
         for (int x = 0; x < BoardConstants.SIZE; x++) {
             for (int y = 0; y < BoardConstants.SIZE; y++) {
-                Piece piece = board[x][y];
+                Piece piece = getPiece(x, y);
                 if (piece != null && piece.isWhite() == isWhiteTurn) {
                     legalMoves = getMoves(piece, legalMoves);
 
@@ -229,31 +213,40 @@ public class Board {
         int direction = pawn.isWhite() ? 1 : -1;
 
         // Forward move
-        if (isWithinBoard(x, y + direction) && board[x][y + direction] == null) {
+        if (isWithinBoard(x, y + direction) && getPiece(x, y + direction) == null) {
             potentialMoves.add(new Move(x, y, x, y + direction, pawn, null));
             // Double move from starting position
             if ((!pawn.isWhite() && y == BoardConstants.SIZE - 2) || (pawn.isWhite() && y == 1)) {
-                if (isWithinBoard(x, y + 2 * direction) && board[x][y + 2 * direction] == null) {
+                if (isWithinBoard(x, y + 2 * direction) && getPiece(x, y + 2 * direction) == null) {
                     potentialMoves.add(new Move(x, y, x, y + 2 * direction, pawn, null));
                 }
             }
         }
-        // Captures
-        if (isWithinBoard(x + 1, y + direction) && board[x + 1][y + direction] != null
-                && board[x + 1][y + direction].isWhite() != pawn.isWhite()) {
-            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, board[x + 1][y + direction]));
-        }
-        if (isWithinBoard(x - 1, y + direction) && board[x - 1][y + direction] != null
-                && board[x - 1][y + direction].isWhite() != pawn.isWhite()) {
-            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, board[x - 1][y + direction]));
-        }
-        // En passant
-        if (isEnPassantPossible(pawn, x + 1, y, direction)) {
-            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, board[x + 1][y]));
-        }
-        if (isEnPassantPossible(pawn, x - 1, y, direction)) {
-            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, board[x - 1][y]));
-        }
+
+        /*
+         * // Captures // TODO rest of this method
+         * if (isWithinBoard(x + 1, y + direction) && getPiece(x + 1, y + direction) !=
+         * null
+         * && getPiece(x + 1, y + direction).isWhite() != pawn.isWhite()) {
+         * potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
+         * y + direction)));
+         * }
+         * if (isWithinBoard(x - 1, y + direction) && getPiece(x - 1, y + direction) !=
+         * null
+         * && getPiece(x - 1, y + direction).isWhite() != pawn.isWhite()) {
+         * potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
+         * y + direction)));
+         * }
+         * // En passant
+         * if (isEnPassantPossible(pawn, x + 1, y, direction)) {
+         * potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
+         * y)));
+         * }
+         * if (isEnPassantPossible(pawn, x - 1, y, direction)) {
+         * potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
+         * y)));
+         * }
+         */
 
         return addLegalMoves(potentialMoves, moves);
     }
@@ -270,7 +263,7 @@ public class Board {
             if (!isKingInCheck(potentialMove.getMovingPiece().isWhite())) {
                 illegalCheck = false;
             }
-            movePiece(newX, newY, x, y);
+            setPiece(x, y, getPiece(newX, newY));
             setPiece(newX, newY, targetPiece);
         }
 
@@ -286,14 +279,14 @@ public class Board {
     }
 
     private boolean isEnPassantPossible(Piece piece, int targetX, int targetY, int direction) {
-        Piece adjacentPiece = board[targetX][targetY];
-        return adjacentPiece instanceof Pawn && ((Pawn) adjacentPiece).isPassentable(piece)
-                && isCapturable(piece, targetX, targetY + direction);
+        Piece adjacentPiece = getPiece(targetX, targetY);
+        return isCapturable(piece, targetX, targetY + direction) && adjacentPiece instanceof Pawn
+                && ((Pawn) adjacentPiece).isPassentable(piece);
     }
 
     private boolean isCapturable(Piece initialPiece, int targetX, int targetY) {
-        return isWithinBoard(targetX, targetY)
-                && (board[targetX][targetY] == null || board[targetX][targetY].isWhite() != initialPiece.isWhite());
+        return isWithinBoard(targetX, targetY) && (getPiece(targetX, targetY) == null
+                || getPiece(targetX, targetY).isWhite() != initialPiece.isWhite());
     }
 
     public boolean isSufficientMaterial() {
@@ -302,7 +295,7 @@ public class Board {
 
         for (int x = 0; x < BoardConstants.SIZE; x++) {
             for (int y = 0; y < BoardConstants.SIZE; y++) {
-                Piece piece = board[x][y];
+                Piece piece = getPiece(x, y);
                 if (piece != null) {
                     if (piece instanceof Pawn || piece instanceof Queen || piece instanceof Rook) {
                         return true;
@@ -364,37 +357,37 @@ public class Board {
 
         for (int i = 1; i < BoardConstants.SIZE; i++) {
             if (isCapturable(rook, x + i, y) && !rightBlocked) {
-                if (board[x + i][y] != null) {
+                if (getPiece(x + i, y) != null) {
                     rightBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y, rook, board[x + i][y]));
+                potentialMoves.add(new Move(x, y, x + i, y, rook, getPiece(x + i, y)));
             } else {
                 rightBlocked = true;
             }
 
             if (isCapturable(rook, x - i, y) && !leftBlocked) {
-                if (board[x - i][y] != null) {
+                if (getPiece(x - i, y) != null) {
                     leftBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y, rook, board[x - i][y]));
+                potentialMoves.add(new Move(x, y, x - i, y, rook, getPiece(x - i, y)));
             } else {
                 leftBlocked = true;
             }
 
             if (isCapturable(rook, x, y + i) && !upBlocked) {
-                if (board[x][y + i] != null) {
+                if (getPiece(x, y + i) != null) {
                     upBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x, y + i, rook, board[x][y + i]));
+                potentialMoves.add(new Move(x, y, x, y + i, rook, getPiece(x, y + i)));
             } else {
                 upBlocked = true;
             }
 
             if (isCapturable(rook, x, y - i) && !downBlocked) {
-                if (board[x][y - i] != null) {
+                if (getPiece(x, y - i) != null) {
                     downBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x, y - i, rook, board[x][y - i]));
+                potentialMoves.add(new Move(x, y, x, y - i, rook, getPiece(x, y - i)));
             } else {
                 downBlocked = true;
             }
@@ -415,37 +408,37 @@ public class Board {
 
         for (int i = 1; i < BoardConstants.SIZE; i++) {
             if (isCapturable(bishop, x + i, y + i) && !rightBlocked) {
-                if (board[x + i][y + i] != null) {
+                if (getPiece(x + i, y + i) != null) {
                     rightBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y + i, bishop, board[x + i][y + i]));
+                potentialMoves.add(new Move(x, y, x + i, y + i, bishop, getPiece(x + i, y + i)));
             } else {
                 rightBlocked = true;
             }
 
             if (isCapturable(bishop, x - i, y - i) && !leftBlocked) {
-                if (board[x - i][y - i] != null) {
+                if (getPiece(x - i, y - i) != null) {
                     leftBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y - i, bishop, board[x - i][y - i]));
+                potentialMoves.add(new Move(x, y, x - i, y - i, bishop, getPiece(x - i, y - i)));
             } else {
                 leftBlocked = true;
             }
 
             if (isCapturable(bishop, x - i, y + i) && !upBlocked) {
-                if (board[x - i][y + i] != null) {
+                if (getPiece(x - i, y + i) != null) {
                     upBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y + i, bishop, board[x - i][y + i]));
+                potentialMoves.add(new Move(x, y, x - i, y + i, bishop, getPiece(x - i, y + i)));
             } else {
                 upBlocked = true;
             }
 
             if (isCapturable(bishop, x + i, y - i) && !downBlocked) {
-                if (board[x + i][y - i] != null) {
+                if (getPiece(x + i, y - i) != null) {
                     downBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y - i, bishop, board[x + i][y - i]));
+                potentialMoves.add(new Move(x, y, x + i, y - i, bishop, getPiece(x + i, y - i)));
             } else {
                 downBlocked = true;
             }
@@ -469,73 +462,73 @@ public class Board {
 
         for (int i = 1; i < BoardConstants.SIZE; i++) {
             if (isCapturable(queen, x + i, y) && !rightBlocked) {
-                if (board[x + i][y] != null) {
+                if (getPiece(x + i, y) != null) {
                     rightBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y, queen, board[x + i][y]));
+                potentialMoves.add(new Move(x, y, x + i, y, queen, getPiece(x + i, y)));
             } else {
                 rightBlocked = true;
             }
 
             if (isCapturable(queen, x - i, y) && !leftBlocked) {
-                if (board[x - i][y] != null) {
+                if (getPiece(x - i, y) != null) {
                     leftBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y, queen, board[x - i][y]));
+                potentialMoves.add(new Move(x, y, x - i, y, queen, getPiece(x - i, y)));
             } else {
                 leftBlocked = true;
             }
 
             if (isCapturable(queen, x, y + i) && !upBlocked) {
-                if (board[x][y + i] != null) {
+                if (getPiece(x, y + i) != null) {
                     upBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x, y + i, queen, board[x][y + i]));
+                potentialMoves.add(new Move(x, y, x, y + i, queen, getPiece(x, y + i)));
             } else {
                 upBlocked = true;
             }
 
             if (isCapturable(queen, x, y - i) && !downBlocked) {
-                if (board[x][y - i] != null) {
+                if (getPiece(x, y - i) != null) {
                     downBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x, y - i, queen, board[x][y - i]));
+                potentialMoves.add(new Move(x, y, x, y - i, queen, getPiece(x, y - i)));
             } else {
                 downBlocked = true;
             }
 
             if (isCapturable(queen, x + i, y + i) && !upRightBlocked) {
-                if (board[x + i][y + i] != null) {
+                if (getPiece(x + i, y + i) != null) {
                     upRightBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y + i, queen, board[x + i][y + i]));
+                potentialMoves.add(new Move(x, y, x + i, y + i, queen, getPiece(x + i, y + i)));
             } else {
                 upRightBlocked = true;
             }
 
             if (isCapturable(queen, x - i, y - i) && !downLeftBlocked) {
-                if (board[x - i][y - i] != null) {
+                if (getPiece(x - i, y - i) != null) {
                     downLeftBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y - i, queen, board[x - i][y - i]));
+                potentialMoves.add(new Move(x, y, x - i, y - i, queen, getPiece(x - i, y - i)));
             } else {
                 downLeftBlocked = true;
             }
 
             if (isCapturable(queen, x - i, y + i) && !upLeftBlocked) {
-                if (board[x - i][y + i] != null) {
+                if (getPiece(x - i, y + i) != null) {
                     upLeftBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x - i, y + i, queen, board[x - i][y + i]));
+                potentialMoves.add(new Move(x, y, x - i, y + i, queen, getPiece(x - i, y + i)));
             } else {
                 upLeftBlocked = true;
             }
 
             if (isCapturable(queen, x + i, y - i) && !downRightBlocked) {
-                if (board[x + i][y - i] != null) {
+                if (getPiece(x + i, y - i) != null) {
                     downRightBlocked = true;
                 }
-                potentialMoves.add(new Move(x, y, x + i, y - i, queen, board[x + i][y - i]));
+                potentialMoves.add(new Move(x, y, x + i, y - i, queen, getPiece(x + i, y - i)));
             } else {
                 downRightBlocked = true;
             }
@@ -554,7 +547,7 @@ public class Board {
             int newX = x + move[0];
             int newY = y + move[1];
             if (isCapturable(knight, newX, newY)) {
-                potentialMoves.add(new Move(x, y, newX, newY, knight, board[newX][newY]));
+                potentialMoves.add(new Move(x, y, newX, newY, knight, getPiece(newX, newY)));
             }
         }
         return addLegalMoves(potentialMoves, moves);
@@ -569,7 +562,7 @@ public class Board {
             int newX = x + move[0];
             int newY = y + move[1];
             if (isCapturable(king, newX, newY)) {
-                potentialMoves.add(new Move(x, y, newX, newY, king, board[newX][newY]));
+                potentialMoves.add(new Move(x, y, newX, newY, king, getPiece(newX, newY)));
             }
         }
         return addLegalMoves(potentialMoves, moves);
