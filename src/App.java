@@ -5,7 +5,9 @@ import Constants.BoardConstants;
 import Constants.VisualConstants;
 import GameplayLogic.Board;
 import GameplayLogic.Move;
+import GameplayLogic.Pieces.Pawn;
 import GameplayLogic.Pieces.Piece;
+import GameplayLogic.Pieces.Queen;
 import VisualLogic.viChessTile;
 import VisualLogic.viLitTile;
 import javafx.application.Application;
@@ -19,12 +21,12 @@ import javafx.stage.Stage;
 public class App extends Application {
     public Board board = new Board();
     private Group tileGroup = new Group();
-
     private Group pieceGroup = new Group();
-
     private ArrayList<Move> litSquares = new ArrayList<Move>();
     private Group litSquaresGroup = new Group();
     private viLitTile litSquaresBoard[][] = new viLitTile[BoardConstants.SIZE][BoardConstants.SIZE];
+
+    boolean isWhiteTurn = true;
 
     public void start(Stage primaryStage) {
         Scene scene = new Scene(makeBoard());
@@ -59,8 +61,6 @@ public class App extends Application {
 
                 Piece piece = board.getPiece(row, col);
                 if (piece != null) {
-                    pieceGroup.getChildren().add(piece);
-                    piece.relocatePiece(boardXtoVisual(row, col), boardYtoVisual(row, col));
 
                     doPieceVisuals(piece);
                 }
@@ -72,6 +72,11 @@ public class App extends Application {
     }
 
     private void doPieceVisuals(Piece piece) {
+        int x = piece.getX();
+        int y = piece.getY();
+
+        pieceGroup.getChildren().add(piece);
+        piece.relocatePiece(boardXtoVisual(x, y), boardYtoVisual(x, y));
         doOnMousePressed(piece);
         doOnMouseDragged(piece);
         doOnMouseReleased(piece);
@@ -87,21 +92,30 @@ public class App extends Application {
                 }
                 System.out.println("Ruh oh, boards !=");
             }
+            activateLitSquares(piece);
 
+        });
+    }
+
+    private void activateLitSquares(Piece piece) {
+        if (piece.isWhite() == isWhiteTurn) {
             litSquares = board.getMoves(piece, litSquares);
 
             for (Move move : litSquares) {
 
                 litSquaresBoard[move.getEndX()][move.getEndY()].activate(true);
             }
-
-        });
+            System.out.println(litSquares.size());
+        }
     }
 
     private void doOnMouseDragged(Piece piece) {
         piece.setOnMouseDragged(e -> {
-            piece.relocate(boardSnapX(e.getSceneX(), e.getSceneY()),
-                    (boardSnapY(e.getSceneX(), e.getSceneY())));
+            if (piece.isWhite() == isWhiteTurn) {
+                piece.relocate(boardSnapX(e.getSceneX(), e.getSceneY()),
+                        (boardSnapY(e.getSceneX(), e.getSceneY())));
+            }
+
         });
     }
 
@@ -115,9 +129,11 @@ public class App extends Application {
             }
             litSquares.clear();
 
-            movePiece(piece, boardSnapX(e.getSceneX(), e.getSceneY()),
-                    boardSnapY(e.getSceneX(), e.getSceneY()));
-
+            if (tryMove(piece, boardSnapX(e.getSceneX(), e.getSceneY()), boardSnapY(e.getSceneX(), e.getSceneY()))) {
+                if (board.isGameOver(isWhiteTurn)) {
+                    // TODO checkmate
+                }
+            }
         });
     }
 
@@ -145,37 +161,70 @@ public class App extends Application {
         return BoardConstants.SIZE - 1 - (int) (pixelY - VisualConstants.Y_OFFSET) / VisualConstants.TILE_SIZE;
     }
 
-    private void movePiece(Piece piece, int pixelX, int pixelY) {
+    public boolean tryMove(Piece piece, int pixelX, int pixelY) {
         int newX = pixelXToBoard(pixelX, pixelY);
         int newY = pixelYToBoard(pixelX, pixelY);
         int oldX = piece.getX();
         int oldY = piece.getY();
+        ArrayList<Move> movesList = new ArrayList<Move>();
 
-        if (board.isWithinBoard(newX, newY)) {
+        if (board.isWithinBoard(newX, newY) && piece.isWhite() == isWhiteTurn) {
             Piece targetPiece = board.getPiece(newX, newY);
-            if (!board.movePiece(oldX, oldY, newX, newY)) {
-                piece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
-                System.out.println("Not moved");
+            Move attemptedMove = new Move(oldX, oldY, newX, newY, piece, targetPiece);
+            movesList = board.getMoves(piece, movesList);
 
-            } else {
+            if (tempHasMoves(movesList, attemptedMove) && board.doPlayerMove(oldX, oldY, newX, newY)) {
+                isWhiteTurn = !isWhiteTurn;
                 if (targetPiece != null) {
                     deletePiece(targetPiece);
                     System.out.println("Captured");
                 } else {
                     System.out.println("Moved");
                 }
+
+                // promotion (auto queen rn and prolly for ever cause im lazy tbh)
+                if ((newY == 0 || newY == BoardConstants.SIZE - 1) && board.getPiece(newX, newY) instanceof Pawn) {
+                    promote(newX, newY, !isWhiteTurn);
+                    deletePiece(piece);
+                }
+
+                // TODO other visuals needed
+                return true;
+            } else {
+                piece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
+                System.out.println("Not moved1");
             }
         } else {
             piece.relocatePiece(boardXtoVisual(oldX, oldY), boardYtoVisual(oldX, oldY));
-            System.out.println("Not moved");
+            System.out.println("Not moved2");
         }
+        return false;
 
     }
 
+    public boolean tempHasMoves(ArrayList<Move> movesList, Move attemptedMove) {
+        for (Move move : movesList) {
+            if (move.equals(attemptedMove)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void deletePiece(Piece piece) {
-        piece.relocate(0, 0);
-        piece.setVisible(false);
-        piece = null;
+        // piece.relocate(0, 0);
+        // piece.setVisible(false);
+        pieceGroup.getChildren().remove(piece);
+        // piece = null;
+    }
+
+    private void promote(int x, int y, boolean isWhite) {
+        Piece oldPawn = new Queen(x, y, isWhite);
+        deletePiece(board.getPiece(x, y));
+        board.setPiece(x, y, oldPawn);
+        doPieceVisuals(oldPawn);
+
     }
 
 }

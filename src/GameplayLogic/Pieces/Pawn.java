@@ -4,11 +4,9 @@ import Constants.BoardConstants;
 import javafx.scene.image.Image;
 
 public class Pawn extends Piece {
-    boolean isPassentable;
 
     public Pawn(int x, int y, boolean isWhite) {
         super(x, y, isWhite);
-        isPassentable = false;
     }
 
     public boolean isValidMove(int newX, int newY) {
@@ -40,14 +38,6 @@ public class Pawn extends Piece {
         // dx == 1
 
         return false;
-    }
-
-    public boolean isPassentable(Piece firstPiece) {
-        return isPassentable && isWhite != firstPiece.isWhite;
-    }
-
-    public void setPassentable(boolean passentable) {
-        isPassentable = passentable;
     }
 
     public Image getImage() {

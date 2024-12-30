@@ -13,10 +13,14 @@ import GameplayLogic.Pieces.Rook;
 
 public class Board {
     private Piece[][] board;
+    private Piece whitePassant;
+    private Piece blackPassant;
 
     public Board() {
         this.board = new Piece[BoardConstants.SIZE][BoardConstants.SIZE];
         initializeBoard();
+        this.whitePassant = null;
+        this.blackPassant = null;
     }
 
     // SIZE 8
@@ -30,9 +34,10 @@ public class Board {
         board[0][5] = new Bishop(5, 0, true);
         board[0][6] = new Knight(6, 0, true);
         board[0][7] = new Rook(7, 0, true);
-        // for (int i = 0; i < BoardConstants.SIZE; i++) {
-        // board[i][1] = new Pawn(1, i, true);
-        // }7
+        for (int i = 0; i < BoardConstants.SIZE; i++) {
+            board[1][i] = new Pawn(i, 1, true);
+        }
+
         // Setup black pieces
         board[7][0] = new Rook(0, 7, false);
         board[7][1] = new Knight(1, 7, false);
@@ -45,6 +50,57 @@ public class Board {
         for (int i = 0; i < BoardConstants.SIZE; i++) {
             board[6][i] = new Pawn(i, 6, false);
         }
+    }
+
+    // Move a piece from one position to another, but check if the move creates a
+    // check
+    public boolean doPlayerMove(int startX, int startY, int endX, int endY) {
+        if (!isWithinBoard(startX, startY) || !isWithinBoard(endX, endY)) {
+            return false;
+        }
+
+        Piece piece = getPiece(startX, startY);
+        Piece targetPiece = getPiece(endX, endY);
+        Move potentialMove = new Move(startX, startY, endX, endY, piece, targetPiece);
+
+        if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece, endX, endY)) {
+            return false;
+        }
+
+        // Check if the target position is occupied by a piece of the same color
+        if (piece != null && targetPiece != null && piece.isWhite() == targetPiece.isWhite()) {
+            return false;
+        }
+
+        if (moveCreatesIllegalCheck(potentialMove)) {
+            return false;
+        }
+
+        if (piece.isWhite() && whitePassant != null) {
+            whitePassant = null;
+        }
+
+        if (!piece.isWhite() && blackPassant != null) {
+            blackPassant = null;
+        }
+
+        if (piece instanceof Pawn && ((startY == 1 && endY == 3)
+                || (startY == BoardConstants.SIZE - 2 && endY == BoardConstants.SIZE - 4))) {
+            if (piece.isWhite()) {
+                whitePassant = piece;
+            } else {
+                blackPassant = piece;
+            }
+        }
+
+        // Execute the move
+        board[endY][endX] = piece;
+        board[startY][startX] = null;
+
+        piece.setX(endX);
+        piece.setY(endY);
+
+        return true;
     }
 
     // Move a piece from one position to another
@@ -89,7 +145,9 @@ public class Board {
     }
 
     public Piece getPiece(int x, int y) {
+        System.out.println("Piece gotten at: " + x + ", " + y);
         return board[y][x];
+
     }
 
     // checks if a position is in bounds
@@ -114,12 +172,24 @@ public class Board {
 
     // checks if a path from a piece to a place is unobstructed
     private boolean isPathClear(Piece piece, int newX, int newY) {
+        System.out.println("Checking path clear for " + piece + " " + newX + " " + newY);
         int x = piece.getX();
         int y = piece.getY();
         int dx = Math.abs(newX - x);
         int dy = Math.abs(newY - y);
         int dirX = newX > x ? 1 : -1;
-        int dirY = newX > y ? 1 : -1;
+        int dirY = newY > y ? 1 : -1;
+
+        if (piece instanceof Pawn && dy != 0 && dx == 0) {
+            if (getPiece(x, y + dirY) != null) {
+                return false;
+            }
+
+            if (dy == 2 && getPiece(x, y + 2 * dirY) != null) {
+                return false;
+            }
+
+        }
 
         if ((piece instanceof Bishop || piece instanceof Queen) && (dx == dy)) {
             for (int i = 1; i < Math.abs(dx); i++) {
@@ -131,17 +201,14 @@ public class Board {
         }
 
         if ((piece instanceof Rook || piece instanceof Queen) && (dx == 0 || dy == 0)) {
-            if (dx == 0) {
-                for (int i = Math.min(y, newY) + 1; i < Math.max(y, newY); i++) {
-                    if (getPiece(x, y + dirY * i) != null) {
-                        return false; // Obstructed
-                    }
+            for (int i = 1; i < dy; i++) {
+                if (getPiece(x, y + dirY * i) != null) {
+                    return false; // Obstructed
                 }
-            } else {
-                for (int i = Math.min(x, newX) + 1; i < Math.max(x, newX); i++) {
-                    if (getPiece(x + dirX * i, y) != null) {
-                        return false; // Obstructed
-                    }
+            }
+            for (int i = 1; i < dx; i++) {
+                if (getPiece(x + dirX * i, y) != null) {
+                    return false; // Obstructed
                 }
             }
         }
@@ -206,51 +273,6 @@ public class Board {
         return moves;
     }
 
-    private ArrayList<Move> getPawnMoves(Pawn pawn, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = pawn.getX();
-        int y = pawn.getY();
-        int direction = pawn.isWhite() ? 1 : -1;
-
-        // Forward move
-        if (isWithinBoard(x, y + direction) && getPiece(x, y + direction) == null) {
-            potentialMoves.add(new Move(x, y, x, y + direction, pawn, null));
-            // Double move from starting position
-            if ((!pawn.isWhite() && y == BoardConstants.SIZE - 2) || (pawn.isWhite() && y == 1)) {
-                if (isWithinBoard(x, y + 2 * direction) && getPiece(x, y + 2 * direction) == null) {
-                    potentialMoves.add(new Move(x, y, x, y + 2 * direction, pawn, null));
-                }
-            }
-        }
-
-        /*
-         * // Captures // TODO rest of this method
-         * if (isWithinBoard(x + 1, y + direction) && getPiece(x + 1, y + direction) !=
-         * null
-         * && getPiece(x + 1, y + direction).isWhite() != pawn.isWhite()) {
-         * potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
-         * y + direction)));
-         * }
-         * if (isWithinBoard(x - 1, y + direction) && getPiece(x - 1, y + direction) !=
-         * null
-         * && getPiece(x - 1, y + direction).isWhite() != pawn.isWhite()) {
-         * potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
-         * y + direction)));
-         * }
-         * // En passant
-         * if (isEnPassantPossible(pawn, x + 1, y, direction)) {
-         * potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
-         * y)));
-         * }
-         * if (isEnPassantPossible(pawn, x - 1, y, direction)) {
-         * potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
-         * y)));
-         * }
-         */
-
-        return addLegalMoves(potentialMoves, moves);
-    }
-
     private boolean moveCreatesIllegalCheck(Move potentialMove) {
         int x = potentialMove.getStartX();
         int y = potentialMove.getStartY();
@@ -280,8 +302,14 @@ public class Board {
 
     private boolean isEnPassantPossible(Piece piece, int targetX, int targetY, int direction) {
         Piece adjacentPiece = getPiece(targetX, targetY);
-        return isCapturable(piece, targetX, targetY + direction) && adjacentPiece instanceof Pawn
-                && ((Pawn) adjacentPiece).isPassentable(piece);
+
+        if (piece.isWhite() && blackPassant == adjacentPiece && blackPassant != null) {
+            return isCapturable(piece, targetX, targetY + direction);
+        } else if (!piece.isWhite() && whitePassant == adjacentPiece && whitePassant != null) {
+            return isCapturable(piece, targetX, targetY + direction);
+        }
+
+        return false;
     }
 
     private boolean isCapturable(Piece initialPiece, int targetX, int targetY) {
@@ -565,6 +593,47 @@ public class Board {
                 potentialMoves.add(new Move(x, y, newX, newY, king, getPiece(newX, newY)));
             }
         }
+        return addLegalMoves(potentialMoves, moves);
+    }
+
+    private ArrayList<Move> getPawnMoves(Pawn pawn, ArrayList<Move> moves) {
+        ArrayList<Move> potentialMoves = new ArrayList<Move>();
+        int x = pawn.getX();
+        int y = pawn.getY();
+        int direction = pawn.isWhite() ? 1 : -1;
+
+        // Forward move
+        if (isWithinBoard(x, y + direction) && getPiece(x, y + direction) == null) {
+            potentialMoves.add(new Move(x, y, x, y + direction, pawn, null));
+            // Double move from starting position
+            if ((!pawn.isWhite() && y == BoardConstants.SIZE - 2) || (pawn.isWhite() && y == 1)) {
+                if (isWithinBoard(x, y + 2 * direction) && getPiece(x, y + 2 * direction) == null) {
+                    potentialMoves.add(new Move(x, y, x, y + 2 * direction, pawn, null));
+                }
+            }
+        }
+
+        if (isWithinBoard(x + 1, y + direction) && getPiece(x + 1, y + direction) != null
+                && getPiece(x + 1, y + direction).isWhite() != pawn.isWhite()) {
+            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1, y + direction)));
+        }
+        if (isWithinBoard(x - 1, y + direction) && getPiece(x - 1, y + direction) != null
+                && getPiece(x - 1, y + direction).isWhite() != pawn.isWhite()) {
+            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1, y + direction)));
+        }
+
+        // En passant
+        if (isWithinBoard(x + 1, y + direction) && isEnPassantPossible(pawn, x + 1,
+                y, direction)) {
+            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
+                    y)));
+        }
+        if (isWithinBoard(x - 1, y + direction) && isEnPassantPossible(pawn, x - 1,
+                y, direction)) {
+            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
+                    y)));
+        }
+
         return addLegalMoves(potentialMoves, moves);
     }
 

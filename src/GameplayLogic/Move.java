@@ -44,6 +44,11 @@ public class Move {
         return capturedPiece;
     }
 
+    public boolean equals(Move move) {
+        return (startX == move.getStartX()) && (startY == move.getStartY()) && (endX == move.getEndX())
+                && (endY == move.getEndY());
+    }
+
     public String toString() {
         String capturePart = (capturedPiece != null) ? " capturing " + capturedPiece.getClass().getSimpleName() : "";
         return movingPiece.getClass().getSimpleName() + " from (" + startX + "," + startY + ") to (" + endX + "," + endY
