@@ -11,10 +11,15 @@ import GameplayLogic.Pieces.Piece;
 import GameplayLogic.Pieces.Queen;
 import GameplayLogic.Pieces.Rook;
 
+//////////
+/// Class is used to preform tasks on and be a chessBoard
+/// *Used as such
+/// ***Seperating some logic out may be helpful.
+/// 
 public class Board {
-    private Piece[][] board;
-    private Piece whitePassant;
-    private Piece blackPassant;
+    private Piece[][] board; // the board
+    private Piece whitePassant; // white pawn that can be enpassanted or null
+    private Piece blackPassant; // black pawn that can be enpassanted or null
 
     public Board() {
         this.board = new Piece[BoardConstants.SIZE][BoardConstants.SIZE];
@@ -23,7 +28,10 @@ public class Board {
         this.blackPassant = null;
     }
 
-    // SIZE 8
+    /**
+     * initializes a board of size 8
+     * 
+     */
     private void initializeBoard() {
         // Setup white pieces
         board[0][0] = new Rook(0, 0, true);
@@ -63,6 +71,7 @@ public class Board {
         Piece targetPiece = getPiece(endX, endY);
         Move potentialMove = new Move(startX, startY, endX, endY, piece, targetPiece);
 
+        // Check if the move could never be done
         if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece, endX, endY)) {
             return false;
         }
@@ -72,18 +81,33 @@ public class Board {
             return false;
         }
 
+        // Check if the move creates a check for your king
         if (moveCreatesIllegalCheck(potentialMove)) {
             return false;
         }
 
+        // this happens if the piece is moving via en passant (I should change this)
+        if (piece instanceof Pawn && getPassant(piece.isWhite()) != null
+                && getPassant(piece.isWhite()) == getPiece(endX, endY + (piece.isWhite() ? -1 : 1))) {
+            getPiece(endX, endY + (piece.isWhite() ? -1 : 1)).setVisible(false);
+            getPiece(endX, endY + (piece.isWhite() ? -1 : 1)).relocate(0, 0);
+            getPiece(endX, endY + (piece.isWhite() ? -1 : 1)).resize(0, 0);
+            getPiece(endX, endY + (piece.isWhite() ? -1 : 1)).disableProperty();
+            setPiece(endX, endY + (piece.isWhite() ? -1 : 1), null);
+            System.out.println("Passant detected"); // For Testing
+        }
+
+        // resets whitePassant after black moved
         if (piece.isWhite() && whitePassant != null) {
             whitePassant = null;
         }
 
+        // resets BlackPassant after white moved
         if (!piece.isWhite() && blackPassant != null) {
             blackPassant = null;
         }
 
+        // if a Pawn is double moving it can be passanted
         if (piece instanceof Pawn && ((startY == 1 && endY == 3)
                 || (startY == BoardConstants.SIZE - 2 && endY == BoardConstants.SIZE - 4))) {
             if (piece.isWhite()) {
@@ -96,30 +120,27 @@ public class Board {
         // Execute the move
         board[endY][endX] = piece;
         board[startY][startX] = null;
-
         piece.setX(endX);
         piece.setY(endY);
 
         return true;
     }
 
-    // Move a piece from one position to another
+    /**
+     * sets current position to null and moves the piece to another location
+     * 
+     * @param startX starting X of the movingPiece
+     * @param startY starting Y of the movingPiece
+     * @param endX   ending X of the movingPiece
+     * @param endY   ending Y of the movingPiece
+     * @return whether or not the move was successful
+     */
     public boolean movePiece(int startX, int startY, int endX, int endY) {
         if (!isWithinBoard(startX, startY) || !isWithinBoard(endX, endY)) {
             return false;
         }
 
         Piece piece = getPiece(startX, startY);
-        Piece targetPiece = getPiece(endX, endY);
-
-        if (piece == null || !piece.isValidMove(endX, endY)) {
-            return false;
-        }
-
-        // Check if the target position is occupied by a piece of the same color
-        if (piece != null && targetPiece != null && piece.isWhite() == targetPiece.isWhite()) {
-            return false;
-        }
 
         // Execute the move
         board[endY][endX] = piece;
@@ -131,7 +152,14 @@ public class Board {
         return true;
     }
 
-    // Sets a piece to a position and changes the pieces position
+    /**
+     * sets a Piece to a position
+     * 
+     * @param x     X the Piece will be in
+     * @param y     X the Piece will be in
+     * @param piece the Piece to set
+     * @return whatever was in the position of the piece that was overwritten
+     */
     public Piece setPiece(int x, int y, Piece piece) {
         Piece oldPiece = getPiece(x, y);
         board[y][x] = piece;
@@ -144,18 +172,46 @@ public class Board {
         return oldPiece;
     }
 
+    /**
+     * obvious
+     * 
+     * @param x X to get
+     * @param y Y to get
+     * @return the Piece in the spot
+     */
     public Piece getPiece(int x, int y) {
-        System.out.println("Piece gotten at: " + x + ", " + y);
         return board[y][x];
 
     }
 
-    // checks if a position is in bounds
+    /**
+     * gets the Piece that can be enpassanted by the other color
+     * 
+     * @param isWhite whether or not the attacking Piece is white
+     * @return the Piece that can be enpassanted by the other color or null if
+     *         nothing
+     */
+    public Piece getPassant(boolean isWhite) {
+        return isWhite ? blackPassant : whitePassant;
+    }
+
+    /**
+     * checks if a position is in bounds
+     * 
+     * @param x the X to check
+     * @param y the Y to check
+     * @return whether or not the Piece is in bounds
+     */
     public boolean isWithinBoard(int x, int y) {
         return (x >= 0 && x < BoardConstants.SIZE) && (y >= 0 && y < BoardConstants.SIZE);
     }
 
-    // gets all kings of a certain colour
+    /**
+     * gets every king on the board that is a certain color
+     * 
+     * @param whiteKings whether or not the kings to get are white
+     * @return an ArrayList of kings
+     */
     private ArrayList<Piece> getKings(boolean whiteKings) {
         ArrayList<Piece> kings = new ArrayList<Piece>();
 
@@ -170,9 +226,15 @@ public class Board {
         return kings;
     }
 
-    // checks if a path from a piece to a place is unobstructed
+    /**
+     * Checks if a path from a piece to a place is unobstructed
+     * 
+     * @param piece the movingPiece
+     * @param newX  the X the Piece will move to
+     * @param newY  the Y the Piece will move to
+     * @return whether or not the path is clear
+     */
     private boolean isPathClear(Piece piece, int newX, int newY) {
-        System.out.println("Checking path clear for " + piece + " " + newX + " " + newY);
         int x = piece.getX();
         int y = piece.getY();
         int dx = Math.abs(newX - x);
@@ -194,7 +256,7 @@ public class Board {
         if ((piece instanceof Bishop || piece instanceof Queen) && (dx == dy)) {
             for (int i = 1; i < Math.abs(dx); i++) {
                 if (getPiece(x + i * dirX, y + i * dirY) != null) {
-                    return false; // Obstructed
+                    return false;
                 }
             }
 
@@ -203,12 +265,12 @@ public class Board {
         if ((piece instanceof Rook || piece instanceof Queen) && (dx == 0 || dy == 0)) {
             for (int i = 1; i < dy; i++) {
                 if (getPiece(x, y + dirY * i) != null) {
-                    return false; // Obstructed
+                    return false;
                 }
             }
             for (int i = 1; i < dx; i++) {
                 if (getPiece(x + dirX * i, y) != null) {
-                    return false; // Obstructed
+                    return false;
                 }
             }
         }
@@ -216,6 +278,12 @@ public class Board {
         return true;
     }
 
+    /**
+     * Checks if a king of a certain color is in check
+     * 
+     * @param isWhiteTurn whether or not the king were checking for is white
+     * @return whether or not a king is in check
+     */
     public boolean isKingInCheck(boolean isWhiteTurn) {
         ArrayList<Piece> kings = getKings(isWhiteTurn);
 
@@ -241,6 +309,12 @@ public class Board {
         return false; // King is not in check
     }
 
+    /**
+     * gets all legal moves for all Pieces in a certain color
+     * 
+     * @param isWhiteTurn whether or not the color to get the moves for is white
+     * @return an ArrayList of all the legal moves
+     */
     public ArrayList<Move> generateAllLegalMoves(boolean isWhiteTurn) {
         ArrayList<Move> legalMoves = new ArrayList<>();
         for (int x = 0; x < BoardConstants.SIZE; x++) {
@@ -255,7 +329,14 @@ public class Board {
         return legalMoves;
     }
 
-    // Method to get all possible moves for a piece
+    /**
+     * gets all moves of a certain Piece
+     * 
+     * @param piece the Piece to get the moves from
+     * @param moves the ArrayList to add to
+     * @return the initial ArrayList given (i've truly been coding in c too much and
+     *         I won't change it)
+     */
     public ArrayList<Move> getMoves(Piece piece, ArrayList<Move> moves) {
         if (piece instanceof Pawn) {
             return getPawnMoves((Pawn) piece, moves);
@@ -273,18 +354,78 @@ public class Board {
         return moves;
     }
 
+    /**
+     * checks if the game is over (checkMate, staleMate, insufficient material)
+     * 
+     * @param isWhiteTurn who's turn it is
+     * @return whether or not the game is over
+     */
+    public boolean isGameOver(boolean isWhiteTurn) {
+        boolean isCheckmate = false;
+        boolean isStalemate = false;
+        boolean insufficientMaterial = false; // Check if the current player's king is in check
+        ArrayList<Move> legalMoves = generateAllLegalMoves(isWhiteTurn); // If there are no legal moves, determine if
+                                                                         // it's checkmate or stalemate
+
+        if (legalMoves.isEmpty()) {
+            if (isKingInCheck(isWhiteTurn)) {
+                isCheckmate = true;
+            } else {
+                isStalemate = true;
+            }
+        } else if (!isSufficientMaterial()) {
+            insufficientMaterial = true;
+        }
+
+        if (isCheckmate) {
+            System.out.println((isWhiteTurn ? "White" : "Black") + " is in checkmate. Game over.");
+            return true;
+        }
+
+        if (isStalemate) {
+            System.out.println("Stalemate. Game over.");
+            return true;
+        }
+
+        if (insufficientMaterial) {
+            System.out.println("Insufficient material. Game over.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * checks if a move cause your king to be in check
+     * 
+     * @param potentialMove the move to check (uses movingPiece to get who's turn it
+     *                      is)
+     * @return whether or not a move cause a king to be in check
+     */
     private boolean moveCreatesIllegalCheck(Move potentialMove) {
         int x = potentialMove.getStartX();
         int y = potentialMove.getStartY();
         int newX = potentialMove.getEndX();
         int newY = potentialMove.getEndY();
         Piece targetPiece = potentialMove.getCapturedPiece();
+        Piece enPassantPiece = getPiece(newX, newY);
         boolean illegalCheck = true;
 
-        if (movePiece(x, y, newX, newY)) {
+        if (targetPiece != null && targetPiece.getY() != newY && movePiece(x, y, newX, newY)) {
+            setPiece(newX, targetPiece.getY(), null);
+
             if (!isKingInCheck(potentialMove.getMovingPiece().isWhite())) {
                 illegalCheck = false;
             }
+
+            setPiece(newX, targetPiece.getY(), targetPiece);
+            setPiece(x, y, getPiece(newX, newY));
+            setPiece(newX, newY, enPassantPiece);
+        } else if (movePiece(x, y, newX, newY)) {
+            if (!isKingInCheck(potentialMove.getMovingPiece().isWhite())) {
+                illegalCheck = false;
+            }
+
             setPiece(x, y, getPiece(newX, newY));
             setPiece(newX, newY, targetPiece);
         }
@@ -292,6 +433,14 @@ public class Board {
         return illegalCheck;
     }
 
+    /**
+     * adds all legal moves found from a ArrayList of potential moves to another
+     * ArrayList
+     * 
+     * @param potentialMoves List of potential legal moves
+     * @param moves          List of current legal moves
+     * @return moves
+     */
     private ArrayList<Move> addLegalMoves(ArrayList<Move> potentialMoves, ArrayList<Move> moves) {
         for (Move move : potentialMoves)
             if (!moveCreatesIllegalCheck(move))
@@ -300,6 +449,15 @@ public class Board {
         return moves;
     }
 
+    /**
+     * checks if enpassant is valid here
+     * 
+     * @param piece     starting Piece
+     * @param targetX   X of pawn
+     * @param targetY   Y of pawn
+     * @param direction direction your moving
+     * @return whether or not enpassant is possible
+     */
     private boolean isEnPassantPossible(Piece piece, int targetX, int targetY, int direction) {
         Piece adjacentPiece = getPiece(targetX, targetY);
 
@@ -312,11 +470,24 @@ public class Board {
         return false;
     }
 
+    /**
+     * checks if a spot can be captured
+     * 
+     * @param initialPiece Piece (only used for its color)
+     * @param targetX      X to move to
+     * @param targetY      Y to move to
+     * @return whether or not the spot can be captured
+     */
     private boolean isCapturable(Piece initialPiece, int targetX, int targetY) {
         return isWithinBoard(targetX, targetY) && (getPiece(targetX, targetY) == null
                 || getPiece(targetX, targetY).isWhite() != initialPiece.isWhite());
     }
 
+    /**
+     * checks if there is sufficient material for a side to checkmate
+     * 
+     * @return whether or not a checkmate is possible in relation to material
+     */
     public boolean isSufficientMaterial() {
         ArrayList<Piece> whitePieces = new ArrayList<>();
         ArrayList<Piece> blackPieces = new ArrayList<>();
@@ -374,6 +545,16 @@ public class Board {
 
     }
 
+    // it would make the code more readable if I moved all methods below to the Move
+    // class prolly
+
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param rook  the Piece
+     * @param moves ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getRookMoves(Rook rook, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = rook.getX();
@@ -425,6 +606,13 @@ public class Board {
         return addLegalMoves(potentialMoves, moves);
     }
 
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param bishop the Piece
+     * @param moves  ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getBishopMoves(Bishop bishop, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = bishop.getX();
@@ -475,6 +663,13 @@ public class Board {
         return addLegalMoves(potentialMoves, moves);
     }
 
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param queen the Piece
+     * @param moves ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getQueenMoves(Queen queen, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = queen.getX();
@@ -565,6 +760,13 @@ public class Board {
         return addLegalMoves(potentialMoves, moves);
     }
 
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param knight the Piece
+     * @param moves  ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getKnightMoves(Knight knight, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = knight.getX();
@@ -581,6 +783,13 @@ public class Board {
         return addLegalMoves(potentialMoves, moves);
     }
 
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param king  the Piece
+     * @param moves ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getKingMoves(King king, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = king.getX();
@@ -596,6 +805,13 @@ public class Board {
         return addLegalMoves(potentialMoves, moves);
     }
 
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param pawn  the Piece
+     * @param moves ArrayList to add to
+     * @return moves
+     */
     private ArrayList<Move> getPawnMoves(Pawn pawn, ArrayList<Move> moves) {
         ArrayList<Move> potentialMoves = new ArrayList<Move>();
         int x = pawn.getX();

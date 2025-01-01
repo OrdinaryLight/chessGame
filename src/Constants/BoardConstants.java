@@ -8,5 +8,6 @@ public class BoardConstants {
     public static final int BISHOP_VALUE = 3;
     public static final int KNIGHT_VALUE = 3;
     public static final int PAWN_VALUE = 1;
+    public static final int MAX_DEPTH = 3;
 
 }

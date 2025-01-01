@@ -84,8 +84,6 @@ public class App extends Application {
 
     private void doOnMousePressed(Piece piece) {
         piece.setOnMousePressed(e -> {
-            System.out.println("Mouse clicked at: " + piece.getX() + ", " + piece.getY());
-
             if (board.getPiece(piece.getX(), piece.getY()) != piece) {
                 if (board.getPiece(piece.getX(), piece.getY()) == null) {
                     System.out.println("no board piece");
@@ -121,8 +119,6 @@ public class App extends Application {
 
     private void doOnMouseReleased(Piece piece) {
         piece.setOnMouseReleased(e -> {
-            System.out.println("Mouse released");
-
             for (Move move : litSquares) {
 
                 litSquaresBoard[move.getEndX()][move.getEndY()].activate(false);
@@ -131,7 +127,8 @@ public class App extends Application {
 
             if (tryMove(piece, boardSnapX(e.getSceneX(), e.getSceneY()), boardSnapY(e.getSceneX(), e.getSceneY()))) {
                 if (board.isGameOver(isWhiteTurn)) {
-                    // TODO checkmate
+                    // TODO checkmate visuals
+                    System.out.println("Mate");
                 }
             }
         });
@@ -213,10 +210,8 @@ public class App extends Application {
     }
 
     private void deletePiece(Piece piece) {
-        // piece.relocate(0, 0);
-        // piece.setVisible(false);
         pieceGroup.getChildren().remove(piece);
-        // piece = null;
+        piece = null;
     }
 
     private void promote(int x, int y, boolean isWhite) {
