@@ -58,6 +58,9 @@ public class Board {
         for (int i = 0; i < BoardConstants.SIZE; i++) {
             board[6][i] = new Pawn(i, 6, false);
         }
+
+        // for mitchell
+        // board[5][4] = new King(4, 5, false);
     }
 
     // Move a piece from one position to another, but check if the move creates a
@@ -72,9 +75,15 @@ public class Board {
         Move potentialMove = new Move(startX, startY, endX, endY, piece, targetPiece);
 
         // Check if the move could never be done
-        if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece, endX, endY)) {
+        if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece,
+                endX, endY)) {
             return false;
         }
+
+        // for mitchell
+        // if (piece == null || !isPathClear(piece, endX, endY)) {
+        // return false;
+        // }
 
         // Check if the target position is occupied by a piece of the same color
         if (piece != null && targetPiece != null && piece.isWhite() == targetPiece.isWhite()) {
@@ -338,20 +347,7 @@ public class Board {
      *         I won't change it)
      */
     public ArrayList<Move> getMoves(Piece piece, ArrayList<Move> moves) {
-        if (piece instanceof Pawn) {
-            return getPawnMoves((Pawn) piece, moves);
-        } else if (piece instanceof Rook) {
-            return getRookMoves((Rook) piece, moves);
-        } else if (piece instanceof Bishop) {
-            return getBishopMoves((Bishop) piece, moves);
-        } else if (piece instanceof Queen) {
-            return getQueenMoves((Queen) piece, moves);
-        } else if (piece instanceof Knight) {
-            return getKnightMoves((Knight) piece, moves);
-        } else if (piece instanceof King) {
-            return getKingMoves((King) piece, moves);
-        }
-        return moves;
+        return piece.getMoves(moves, this);
     }
 
     /**
@@ -441,46 +437,12 @@ public class Board {
      * @param moves          List of current legal moves
      * @return moves
      */
-    private ArrayList<Move> addLegalMoves(ArrayList<Move> potentialMoves, ArrayList<Move> moves) {
+    public ArrayList<Move> addLegalMoves(ArrayList<Move> potentialMoves, ArrayList<Move> moves) {
         for (Move move : potentialMoves)
             if (!moveCreatesIllegalCheck(move))
                 moves.add(move);
 
         return moves;
-    }
-
-    /**
-     * checks if enpassant is valid here
-     * 
-     * @param piece     starting Piece
-     * @param targetX   X of pawn
-     * @param targetY   Y of pawn
-     * @param direction direction your moving
-     * @return whether or not enpassant is possible
-     */
-    private boolean isEnPassantPossible(Piece piece, int targetX, int targetY, int direction) {
-        Piece adjacentPiece = getPiece(targetX, targetY);
-
-        if (piece.isWhite() && blackPassant == adjacentPiece && blackPassant != null) {
-            return isCapturable(piece, targetX, targetY + direction);
-        } else if (!piece.isWhite() && whitePassant == adjacentPiece && whitePassant != null) {
-            return isCapturable(piece, targetX, targetY + direction);
-        }
-
-        return false;
-    }
-
-    /**
-     * checks if a spot can be captured
-     * 
-     * @param initialPiece Piece (only used for its color)
-     * @param targetX      X to move to
-     * @param targetY      Y to move to
-     * @return whether or not the spot can be captured
-     */
-    private boolean isCapturable(Piece initialPiece, int targetX, int targetY) {
-        return isWithinBoard(targetX, targetY) && (getPiece(targetX, targetY) == null
-                || getPiece(targetX, targetY).isWhite() != initialPiece.isWhite());
     }
 
     /**
@@ -543,314 +505,6 @@ public class Board {
 
         return true;
 
-    }
-
-    // it would make the code more readable if I moved all methods below to the Move
-    // class prolly
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param rook  the Piece
-     * @param moves ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getRookMoves(Rook rook, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = rook.getX();
-        int y = rook.getY();
-        boolean upBlocked = false;
-        boolean downBlocked = false;
-        boolean leftBlocked = false;
-        boolean rightBlocked = false;
-
-        for (int i = 1; i < BoardConstants.SIZE; i++) {
-            if (isCapturable(rook, x + i, y) && !rightBlocked) {
-                if (getPiece(x + i, y) != null) {
-                    rightBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y, rook, getPiece(x + i, y)));
-            } else {
-                rightBlocked = true;
-            }
-
-            if (isCapturable(rook, x - i, y) && !leftBlocked) {
-                if (getPiece(x - i, y) != null) {
-                    leftBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y, rook, getPiece(x - i, y)));
-            } else {
-                leftBlocked = true;
-            }
-
-            if (isCapturable(rook, x, y + i) && !upBlocked) {
-                if (getPiece(x, y + i) != null) {
-                    upBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x, y + i, rook, getPiece(x, y + i)));
-            } else {
-                upBlocked = true;
-            }
-
-            if (isCapturable(rook, x, y - i) && !downBlocked) {
-                if (getPiece(x, y - i) != null) {
-                    downBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x, y - i, rook, getPiece(x, y - i)));
-            } else {
-                downBlocked = true;
-            }
-
-        }
-
-        return addLegalMoves(potentialMoves, moves);
-    }
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param bishop the Piece
-     * @param moves  ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getBishopMoves(Bishop bishop, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = bishop.getX();
-        int y = bishop.getY();
-        boolean upBlocked = false;
-        boolean downBlocked = false;
-        boolean leftBlocked = false;
-        boolean rightBlocked = false;
-
-        for (int i = 1; i < BoardConstants.SIZE; i++) {
-            if (isCapturable(bishop, x + i, y + i) && !rightBlocked) {
-                if (getPiece(x + i, y + i) != null) {
-                    rightBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y + i, bishop, getPiece(x + i, y + i)));
-            } else {
-                rightBlocked = true;
-            }
-
-            if (isCapturable(bishop, x - i, y - i) && !leftBlocked) {
-                if (getPiece(x - i, y - i) != null) {
-                    leftBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y - i, bishop, getPiece(x - i, y - i)));
-            } else {
-                leftBlocked = true;
-            }
-
-            if (isCapturable(bishop, x - i, y + i) && !upBlocked) {
-                if (getPiece(x - i, y + i) != null) {
-                    upBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y + i, bishop, getPiece(x - i, y + i)));
-            } else {
-                upBlocked = true;
-            }
-
-            if (isCapturable(bishop, x + i, y - i) && !downBlocked) {
-                if (getPiece(x + i, y - i) != null) {
-                    downBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y - i, bishop, getPiece(x + i, y - i)));
-            } else {
-                downBlocked = true;
-            }
-
-        }
-        return addLegalMoves(potentialMoves, moves);
-    }
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param queen the Piece
-     * @param moves ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getQueenMoves(Queen queen, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = queen.getX();
-        int y = queen.getY();
-        boolean upBlocked = false;
-        boolean upRightBlocked = false;
-        boolean downBlocked = false;
-        boolean downRightBlocked = false;
-        boolean leftBlocked = false;
-        boolean upLeftBlocked = false;
-        boolean rightBlocked = false;
-        boolean downLeftBlocked = false;
-
-        for (int i = 1; i < BoardConstants.SIZE; i++) {
-            if (isCapturable(queen, x + i, y) && !rightBlocked) {
-                if (getPiece(x + i, y) != null) {
-                    rightBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y, queen, getPiece(x + i, y)));
-            } else {
-                rightBlocked = true;
-            }
-
-            if (isCapturable(queen, x - i, y) && !leftBlocked) {
-                if (getPiece(x - i, y) != null) {
-                    leftBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y, queen, getPiece(x - i, y)));
-            } else {
-                leftBlocked = true;
-            }
-
-            if (isCapturable(queen, x, y + i) && !upBlocked) {
-                if (getPiece(x, y + i) != null) {
-                    upBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x, y + i, queen, getPiece(x, y + i)));
-            } else {
-                upBlocked = true;
-            }
-
-            if (isCapturable(queen, x, y - i) && !downBlocked) {
-                if (getPiece(x, y - i) != null) {
-                    downBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x, y - i, queen, getPiece(x, y - i)));
-            } else {
-                downBlocked = true;
-            }
-
-            if (isCapturable(queen, x + i, y + i) && !upRightBlocked) {
-                if (getPiece(x + i, y + i) != null) {
-                    upRightBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y + i, queen, getPiece(x + i, y + i)));
-            } else {
-                upRightBlocked = true;
-            }
-
-            if (isCapturable(queen, x - i, y - i) && !downLeftBlocked) {
-                if (getPiece(x - i, y - i) != null) {
-                    downLeftBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y - i, queen, getPiece(x - i, y - i)));
-            } else {
-                downLeftBlocked = true;
-            }
-
-            if (isCapturable(queen, x - i, y + i) && !upLeftBlocked) {
-                if (getPiece(x - i, y + i) != null) {
-                    upLeftBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x - i, y + i, queen, getPiece(x - i, y + i)));
-            } else {
-                upLeftBlocked = true;
-            }
-
-            if (isCapturable(queen, x + i, y - i) && !downRightBlocked) {
-                if (getPiece(x + i, y - i) != null) {
-                    downRightBlocked = true;
-                }
-                potentialMoves.add(new Move(x, y, x + i, y - i, queen, getPiece(x + i, y - i)));
-            } else {
-                downRightBlocked = true;
-            }
-
-        }
-        return addLegalMoves(potentialMoves, moves);
-    }
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param knight the Piece
-     * @param moves  ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getKnightMoves(Knight knight, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = knight.getX();
-        int y = knight.getY();
-        int[][] knightMoves = { { 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, { 1, 2 }, { 1, -2 }, { -1, 2 },
-                { -1, -2 } };
-        for (int[] move : knightMoves) {
-            int newX = x + move[0];
-            int newY = y + move[1];
-            if (isCapturable(knight, newX, newY)) {
-                potentialMoves.add(new Move(x, y, newX, newY, knight, getPiece(newX, newY)));
-            }
-        }
-        return addLegalMoves(potentialMoves, moves);
-    }
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param king  the Piece
-     * @param moves ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getKingMoves(King king, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = king.getX();
-        int y = king.getY();
-        int[][] kingMoves = { { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, 1 }, { 0, -1 }, { -1, 1 }, { -1, 0 }, { -1, -1 } };
-        for (int[] move : kingMoves) {
-            int newX = x + move[0];
-            int newY = y + move[1];
-            if (isCapturable(king, newX, newY)) {
-                potentialMoves.add(new Move(x, y, newX, newY, king, getPiece(newX, newY)));
-            }
-        }
-        return addLegalMoves(potentialMoves, moves);
-    }
-
-    /**
-     * adds to given list of moves all legal moves of given Piece
-     * 
-     * @param pawn  the Piece
-     * @param moves ArrayList to add to
-     * @return moves
-     */
-    private ArrayList<Move> getPawnMoves(Pawn pawn, ArrayList<Move> moves) {
-        ArrayList<Move> potentialMoves = new ArrayList<Move>();
-        int x = pawn.getX();
-        int y = pawn.getY();
-        int direction = pawn.isWhite() ? 1 : -1;
-
-        // Forward move
-        if (isWithinBoard(x, y + direction) && getPiece(x, y + direction) == null) {
-            potentialMoves.add(new Move(x, y, x, y + direction, pawn, null));
-            // Double move from starting position
-            if ((!pawn.isWhite() && y == BoardConstants.SIZE - 2) || (pawn.isWhite() && y == 1)) {
-                if (isWithinBoard(x, y + 2 * direction) && getPiece(x, y + 2 * direction) == null) {
-                    potentialMoves.add(new Move(x, y, x, y + 2 * direction, pawn, null));
-                }
-            }
-        }
-
-        if (isWithinBoard(x + 1, y + direction) && getPiece(x + 1, y + direction) != null
-                && getPiece(x + 1, y + direction).isWhite() != pawn.isWhite()) {
-            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1, y + direction)));
-        }
-        if (isWithinBoard(x - 1, y + direction) && getPiece(x - 1, y + direction) != null
-                && getPiece(x - 1, y + direction).isWhite() != pawn.isWhite()) {
-            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1, y + direction)));
-        }
-
-        // En passant
-        if (isWithinBoard(x + 1, y + direction) && isEnPassantPossible(pawn, x + 1,
-                y, direction)) {
-            potentialMoves.add(new Move(x, y, x + 1, y + direction, pawn, getPiece(x + 1,
-                    y)));
-        }
-        if (isWithinBoard(x - 1, y + direction) && isEnPassantPossible(pawn, x - 1,
-                y, direction)) {
-            potentialMoves.add(new Move(x, y, x - 1, y + direction, pawn, getPiece(x - 1,
-                    y)));
-        }
-
-        return addLegalMoves(potentialMoves, moves);
     }
 
 }

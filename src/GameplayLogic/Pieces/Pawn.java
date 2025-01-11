@@ -1,6 +1,10 @@
 package GameplayLogic.Pieces;
 
+import java.util.ArrayList;
+
 import Constants.BoardConstants;
+import GameplayLogic.Board;
+import GameplayLogic.Move;
 import javafx.scene.image.Image;
 
 public class Pawn extends Piece {
@@ -36,6 +40,71 @@ public class Pawn extends Piece {
             return true;
         }
         // dx == 1
+
+        return false;
+    }
+
+    /**
+     * adds to given list of moves all legal moves of given Piece
+     * 
+     * @param pawn  the Piece
+     * @param moves ArrayList to add to
+     * @return moves
+     */
+    public ArrayList<Move> getMoves(ArrayList<Move> moves, Board board) {
+        ArrayList<Move> potentialMoves = new ArrayList<Move>();
+        int direction = isWhite ? 1 : -1;
+
+        // Forward move
+        if (inBounds(x, y + direction) && board.getPiece(x, y + direction) == null) {
+            potentialMoves.add(new Move(x, y, x, y + direction, this, null));
+            // Double move from starting position
+            if ((!isWhite && y == BoardConstants.SIZE - 2) || (isWhite && y == 1)) {
+                if (inBounds(x, y + 2 * direction) && board.getPiece(x, y + 2 * direction) == null) {
+                    potentialMoves.add(new Move(x, y, x, y + 2 * direction, this, null));
+                }
+            }
+        }
+
+        if (inBounds(x + 1, y + direction) && board.getPiece(x + 1, y + direction) != null
+                && board.getPiece(x + 1, y + direction).isWhite() != isWhite) {
+            potentialMoves.add(new Move(x, y, x + 1, y + direction, this, board.getPiece(x + 1, y + direction)));
+        }
+        if (inBounds(x - 1, y + direction) && board.getPiece(x - 1, y + direction) != null
+                && board.getPiece(x - 1, y + direction).isWhite() != isWhite) {
+            potentialMoves.add(new Move(x, y, x - 1, y + direction, this, board.getPiece(x - 1, y + direction)));
+        }
+
+        // En passant
+        if (inBounds(x + 1, y + direction) && isEnPassantPossible(x + 1, y, direction, board)) {
+            potentialMoves.add(new Move(x, y, x + 1, y + direction, this, board.getPiece(x + 1,
+                    y)));
+        }
+        if (inBounds(x - 1, y + direction) && isEnPassantPossible(x - 1, y, direction, board)) {
+            potentialMoves.add(new Move(x, y, x - 1, y + direction, this, board.getPiece(x - 1,
+                    y)));
+        }
+
+        return board.addLegalMoves(potentialMoves, moves);
+    }
+
+    /**
+     * checks if enpassant is valid here
+     * 
+     * @param piece     starting Piece
+     * @param targetX   X of pawn
+     * @param targetY   Y of pawn
+     * @param direction direction your moving
+     * @return whether or not enpassant is possible
+     */
+    private boolean isEnPassantPossible(int targetX, int targetY, int direction, Board board) {
+        Piece adjacentPiece = board.getPiece(targetX, targetY);
+
+        if (isWhite && board.getPassant(isWhite) == adjacentPiece && board.getPassant(isWhite) != null) {
+            return isCapturable(targetX, targetY + direction, board);
+        } else if (isWhite && board.getPassant(!isWhite) == adjacentPiece && board.getPassant(!isWhite) != null) {
+            return isCapturable(targetX, targetY + direction, board);
+        }
 
         return false;
     }

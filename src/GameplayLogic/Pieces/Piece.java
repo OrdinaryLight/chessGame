@@ -1,7 +1,11 @@
 package GameplayLogic.Pieces;
 
+import java.util.ArrayList;
+
 import Constants.BoardConstants;
 import Constants.VisualConstants;
+import GameplayLogic.Board;
+import GameplayLogic.Move;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -37,6 +41,21 @@ public abstract class Piece extends StackPane {
      * @return whether or not a move is possible
      */
     public abstract boolean isValidMove(int newX, int newY);
+
+    public abstract ArrayList<Move> getMoves(ArrayList<Move> moves, Board board);
+
+    /**
+     * checks if a spot can be captured
+     * 
+     * @param initialPiece Piece (only used for its color)
+     * @param targetX      X to move to
+     * @param targetY      Y to move to
+     * @return whether or not the spot can be captured
+     */
+    protected boolean isCapturable(int targetX, int targetY, Board board) {
+        return inBounds(targetX, targetY) && (board.getPiece(targetX, targetY) == null
+                || board.getPiece(targetX, targetY).isWhite() != isWhite);
+    }
 
     /**
      * gets the image associated with that piece
