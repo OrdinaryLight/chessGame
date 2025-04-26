@@ -2,7 +2,6 @@ package GameplayLogic.Pieces;
 
 import java.util.ArrayList;
 
-import Constants.BoardConstants;
 import GameplayLogic.Board;
 import GameplayLogic.Move;
 import javafx.scene.image.Image;
