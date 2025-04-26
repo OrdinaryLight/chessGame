@@ -85,7 +85,7 @@ public class Pawn extends Piece {
                     y)));
         }
 
-        return board.addLegalMoves(potentialMoves, moves);
+        return addLegalMoves(potentialMoves, moves, board);
     }
 
     /**

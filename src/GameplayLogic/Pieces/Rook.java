@@ -63,7 +63,7 @@ public class Rook extends Piece {
 
         }
 
-        return board.addLegalMoves(potentialMoves, moves);
+        return addLegalMoves(potentialMoves, moves, board);
     }
 
     public Image getImage() {

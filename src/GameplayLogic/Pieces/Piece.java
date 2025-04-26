@@ -42,14 +42,38 @@ public abstract class Piece extends StackPane {
      */
     public abstract boolean isValidMove(int newX, int newY);
 
+    /**
+     * gets all legal moves of the piece who called the function
+     * 
+     * @param moves where to store the moves
+     * @param board the board we're using
+     * @return moves
+     */
     public abstract ArrayList<Move> getMoves(ArrayList<Move> moves, Board board);
+
+    /**
+     * adds all legal moves found from a ArrayList of potential moves to another
+     * ArrayList
+     * 
+     * @param potentialMoves List of potential legal moves
+     * @param moves          List of current legal moves
+     * @param board          The board
+     * @return moves
+     */
+    protected ArrayList<Move> addLegalMoves(ArrayList<Move> potentialMoves, ArrayList<Move> moves, Board board) {
+        for (Move move : potentialMoves)
+            if (!board.moveCreatesIllegalCheck(move))
+                moves.add(move);
+
+        return moves;
+    }
 
     /**
      * checks if a spot can be captured
      * 
-     * @param initialPiece Piece (only used for its color)
-     * @param targetX      X to move to
-     * @param targetY      Y to move to
+     * @param targetX X to move to
+     * @param targetY Y to move to
+     * @param board   the board
      * @return whether or not the spot can be captured
      */
     protected boolean isCapturable(int targetX, int targetY, Board board) {

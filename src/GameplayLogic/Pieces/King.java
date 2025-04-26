@@ -35,7 +35,7 @@ public class King extends Piece {
                 potentialMoves.add(new Move(x, y, newX, newY, this, board.getPiece(newX, newY)));
             }
         }
-        return board.addLegalMoves(potentialMoves, moves);
+        return addLegalMoves(potentialMoves, moves, board);
     }
 
     public Image getImage() {

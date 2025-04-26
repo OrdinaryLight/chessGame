@@ -20,12 +20,4 @@ public class viLitTile extends Rectangle {
         setVisible(false);
     }
 
-    /**
-     * makes a tile visible or not visible
-     * 
-     * @param visible whether you want the tile to be visible or not
-     */
-    public void activate(boolean visible) {
-        setVisible(visible);
-    }
 }

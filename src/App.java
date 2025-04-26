@@ -3,17 +3,21 @@ import java.util.ArrayList;
 
 import Constants.BoardConstants;
 import Constants.VisualConstants;
+import GameplayLogic.AI;
 import GameplayLogic.Board;
 import GameplayLogic.Move;
 import GameplayLogic.Pieces.Pawn;
 import GameplayLogic.Pieces.Piece;
 import GameplayLogic.Pieces.Queen;
+import VisualLogic.OptionButton;
 import VisualLogic.viBorder;
 import VisualLogic.viChessTile;
 import VisualLogic.viLitTile;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.Pane;
@@ -32,17 +36,80 @@ public class App extends Application {
     private viLitTile litSquaresBoard[][] = new viLitTile[BoardConstants.SIZE][BoardConstants.SIZE];
     private viBorder border = new viBorder();
     private boolean isWhiteTurn = true;
+    private Stage stage;
 
     public void start(Stage primaryStage) {
+        stage = primaryStage;
+
+        Scene start = new Scene(makeStartScreen());
+        stage.setTitle("Start menu");
+        stage.setScene(start);
+        stage.show();
+
+    }
+
+    public void playGame() {
         Scene scene = new Scene(makeBoard());
 
-        primaryStage.setTitle("Chess Game");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        stage.setTitle("Chess Game");
+        stage.setScene(scene);
+        stage.show();
+
+        if (isWhiteTurn && BoardConstants.aiRules[BoardConstants.DO_WHITE_AI_IDX] && !isWhiteTurn
+                && BoardConstants.aiRules[BoardConstants.DO_BLACK_AI_IDX]) {
+            while (true) {
+                doAiMove(isWhiteTurn);
+            }
+        } else if (isWhiteTurn && BoardConstants.aiRules[BoardConstants.DO_WHITE_AI_IDX]) {
+            doAiMove(isWhiteTurn);
+        } else if (!isWhiteTurn && BoardConstants.aiRules[BoardConstants.DO_BLACK_AI_IDX]) {
+            doAiMove(isWhiteTurn);
+        }
+
+    }
+
+    public void doAiMove(boolean isWhite) {
+        Move move = AI.aiMove(board, isWhiteTurn, null);
+        Piece piece = move.getMovingPiece();
+        int x = move.getEndX();
+        int y = move.getEndY();
+
+        tryMove(piece, BoardXToPixel(x, y), BoardYToPixel(x, y));
+        isWhiteTurn = !isWhiteTurn;
     }
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    public Pane makeStartScreen() {
+        Pane root = new Pane();
+        root.setPrefSize(VisualConstants.TILE_SIZE * BoardConstants.SIZE,
+                VisualConstants.TILE_SIZE * BoardConstants.SIZE);
+        root.setBackground(new Background(new BackgroundFill(VisualConstants.BACKGROUND1, null, null)));
+        Group buttonsGroup = new Group();
+        ToggleButton whiteAiButton = new OptionButton(BoardConstants.DO_WHITE_AI_IDX, "white player ai");
+        ToggleButton blackAiButton = new OptionButton(BoardConstants.DO_BLACK_AI_IDX, "black player ai");
+        ToggleButton doEnPassants = new OptionButton(BoardConstants.DO_ENPASSANTS_IDX, "force ai's to do enpassant");
+        ToggleButton doCheckMultiplier = new OptionButton(BoardConstants.DO_CHECK_MULTIPLIER_IDX,
+                "checks multiply ai's position score");
+        ToggleButton doCenterPawnsEval = new OptionButton(BoardConstants.DO_CENTER_PAWNS_IDX,
+                "pawns in the center add to ai's position score");
+
+        Button start = new Button("Start");
+        start.setOnMousePressed(_ -> {
+            playGame();
+
+        });
+        start.setMinSize(100, 70);
+        start.relocate((VisualConstants.TILE_SIZE * BoardConstants.SIZE - 100) / 2,
+                (VisualConstants.TILE_SIZE * BoardConstants.SIZE - 70) / 2);
+
+        buttonsGroup.getChildren().addAll(whiteAiButton, blackAiButton, doEnPassants, doCheckMultiplier,
+                doCenterPawnsEval);
+        root.getChildren().addAll(buttonsGroup, start);
+
+        return root;
     }
 
     /**
@@ -80,6 +147,21 @@ public class App extends Application {
         return root;
     }
 
+    public void makeCheckMate(boolean isWhite) {
+        Pane pane = new Pane();
+
+        pane.setPrefSize(2 * VisualConstants.X_OFFSET + VisualConstants.TILE_SIZE * BoardConstants.SIZE,
+                2 * VisualConstants.Y_OFFSET + VisualConstants.TILE_SIZE * BoardConstants.SIZE);
+        pane.getChildren().addAll();
+        pane.setBackground(new Background(new BackgroundFill(VisualConstants.BACKGROUND1, null, null)));
+
+        Scene scene = new Scene(pane);
+        stage.setTitle("Game Over Checkmate");
+        stage.setScene(scene);
+        stage.show();
+
+    }
+
     /**
      * logic for the Pieces (visual and what happens, when click/drag/release
      * pieces)
@@ -87,8 +169,8 @@ public class App extends Application {
      * @param piece the Piece
      */
     private void doPieceVisuals(Piece piece) {
-        int x = piece.getX();
-        int y = piece.getY();
+        final int x = piece.getX();
+        final int y = piece.getY();
 
         pieceGroup.getChildren().add(piece);
         piece.relocatePiece(boardXtoVisual(x, y), boardYtoVisual(x, y));
@@ -103,7 +185,7 @@ public class App extends Application {
      * @param piece the Piece
      */
     private void doOnMousePressed(Piece piece) {
-        piece.setOnMousePressed(e -> {
+        piece.setOnMousePressed(_ -> {
             if (board.getPiece(piece.getX(), piece.getY()) != piece) { // ifs should not be activated this is for
                                                                        // testing mainly
                 if (board.getPiece(piece.getX(), piece.getY()) == null) {
@@ -123,11 +205,12 @@ public class App extends Application {
      */
     private void activateLitSquares(Piece piece) {
         if (piece.isWhite() == isWhiteTurn) {
-            litSquares = board.getMoves(piece, litSquares);
+            litSquares = piece.getMoves(litSquares, board);
 
             for (Move move : litSquares) {
 
-                litSquaresBoard[move.getEndX()][move.getEndY()].activate(true);
+                litSquaresBoard[move.getEndX()][move.getEndY()].setVisible(true);
+                ;
             }
             System.out.println(litSquares.size());
         }
@@ -158,13 +241,13 @@ public class App extends Application {
         piece.setOnMouseReleased(e -> {
             for (Move move : litSquares) {
 
-                litSquaresBoard[move.getEndX()][move.getEndY()].activate(false);
+                litSquaresBoard[move.getEndX()][move.getEndY()].setVisible(false);
             }
             litSquares.clear();
 
             if (tryMove(piece, boardSnapX(e.getSceneX(), e.getSceneY()), boardSnapY(e.getSceneX(), e.getSceneY()))) {
                 if (board.isGameOver(isWhiteTurn)) {
-                    // TODO checkmate visuals
+                    makeCheckMate(isWhiteTurn);
                     System.out.println("Mate");
                 }
             }
@@ -233,6 +316,15 @@ public class App extends Application {
         return BoardConstants.SIZE - 1 - (int) (pixelY - VisualConstants.Y_OFFSET) / VisualConstants.TILE_SIZE;
     }
 
+    // TODO these 2 methods do not work
+    private int BoardXToPixel(int x, int y) {
+        return x * VisualConstants.TILE_SIZE + VisualConstants.X_OFFSET;
+    }
+
+    private int BoardYToPixel(int x, int y) {
+        return (y + 1 - BoardConstants.SIZE) * VisualConstants.TILE_SIZE + VisualConstants.Y_OFFSET;
+    }
+
     /**
      * 
      * 
@@ -251,8 +343,9 @@ public class App extends Application {
         if (board.isWithinBoard(newX, newY) && piece.isWhite() == isWhiteTurn) {
             Piece targetPiece = board.getPiece(newX, newY);
             Move attemptedMove = new Move(oldX, oldY, newX, newY, piece, targetPiece);
-            movesList = board.getMoves(piece, movesList);
+            movesList = piece.getMoves(movesList, board);
 
+            // temperary means forever right here
             if (tempHasMoves(movesList, attemptedMove) && board.doPlayerMove(oldX, oldY, newX, newY)) {
                 isWhiteTurn = !isWhiteTurn; // valid move change who's turn it is
                 if (targetPiece != null) {

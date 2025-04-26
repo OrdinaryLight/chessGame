@@ -59,8 +59,6 @@ public class Board {
             board[6][i] = new Pawn(i, 6, false);
         }
 
-        // for mitchell
-        // board[5][4] = new King(4, 5, false);
     }
 
     // Move a piece from one position to another, but check if the move creates a
@@ -75,15 +73,9 @@ public class Board {
         Move potentialMove = new Move(startX, startY, endX, endY, piece, targetPiece);
 
         // Check if the move could never be done
-        if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece,
-                endX, endY)) {
+        if (piece == null || !piece.isValidMove(endX, endY) || !isPathClear(piece, endX, endY)) {
             return false;
         }
-
-        // for mitchell
-        // if (piece == null || !isPathClear(piece, endX, endY)) {
-        // return false;
-        // }
 
         // Check if the target position is occupied by a piece of the same color
         if (piece != null && targetPiece != null && piece.isWhite() == targetPiece.isWhite()) {
@@ -126,11 +118,7 @@ public class Board {
             }
         }
 
-        // Execute the move
-        board[endY][endX] = piece;
-        board[startY][startX] = null;
-        piece.setX(endX);
-        piece.setY(endY);
+        movePiece(startX, startY, endX, endY);
 
         return true;
     }
@@ -159,6 +147,10 @@ public class Board {
         piece.setY(endY);
 
         return true;
+    }
+
+    public boolean movePiece(Move move) {
+        return movePiece(move.getStartX(), move.getStartY(), move.getEndX(), move.getEndY());
     }
 
     /**
@@ -330,24 +322,12 @@ public class Board {
             for (int y = 0; y < BoardConstants.SIZE; y++) {
                 Piece piece = getPiece(x, y);
                 if (piece != null && piece.isWhite() == isWhiteTurn) {
-                    legalMoves = getMoves(piece, legalMoves);
+                    legalMoves = piece.getMoves(legalMoves, this);
 
                 }
             }
         }
         return legalMoves;
-    }
-
-    /**
-     * gets all moves of a certain Piece
-     * 
-     * @param piece the Piece to get the moves from
-     * @param moves the ArrayList to add to
-     * @return the initial ArrayList given (i've truly been coding in c too much and
-     *         I won't change it)
-     */
-    public ArrayList<Move> getMoves(Piece piece, ArrayList<Move> moves) {
-        return piece.getMoves(moves, this);
     }
 
     /**
@@ -398,7 +378,7 @@ public class Board {
      *                      is)
      * @return whether or not a move cause a king to be in check
      */
-    private boolean moveCreatesIllegalCheck(Move potentialMove) {
+    public boolean moveCreatesIllegalCheck(Move potentialMove) {
         int x = potentialMove.getStartX();
         int y = potentialMove.getStartY();
         int newX = potentialMove.getEndX();
@@ -427,22 +407,6 @@ public class Board {
         }
 
         return illegalCheck;
-    }
-
-    /**
-     * adds all legal moves found from a ArrayList of potential moves to another
-     * ArrayList
-     * 
-     * @param potentialMoves List of potential legal moves
-     * @param moves          List of current legal moves
-     * @return moves
-     */
-    public ArrayList<Move> addLegalMoves(ArrayList<Move> potentialMoves, ArrayList<Move> moves) {
-        for (Move move : potentialMoves)
-            if (!moveCreatesIllegalCheck(move))
-                moves.add(move);
-
-        return moves;
     }
 
     /**
