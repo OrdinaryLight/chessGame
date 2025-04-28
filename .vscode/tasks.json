@@ -13,6 +13,7 @@
                 "--add-modules",
                 "javafx.controls", // Add JavaFX controls module
                 "src/*.java", // Compile all Java files in src
+                "src/Pieces/*.java",
             ],
             "group": {
                 "kind": "build",
