@@ -1,6 +1,3 @@
-package VisualLogic;
-
-import Constants.BoardConstants;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.text.Text;
 
@@ -19,7 +16,7 @@ public class OptionButton extends ToggleButton {
     public void toggle(int num) {
         setOnMousePressed(_ -> {
             System.out.println("pressed " + text);
-            BoardConstants.aiRules[num] = !BoardConstants.aiRules[num];
+            Constants.aiRules[num] = !Constants.aiRules[num];
         });
 
     }
