@@ -8,14 +8,20 @@ import javafx.scene.layout.Pane;
 /// *Used as such
 /// ***Seperating some logic out may be helpful.
 /// 
-public class Board extends Pane {
+public class Board {
     private Group tileGroup = new Group();
     private Group litSquaresGroup = new Group();
     private viLitTile litSquaresBoard[][] = new viLitTile[Constants.SIZE][Constants.SIZE];
     private Group pieceGroup = new Group();
     private viBorder border = new viBorder();
+    private Pane board = new Pane();
+
+    public Pane getBoard() {
+        return board;
+    }
 
     public Board() {
+        this.board = makeBoard();
     }
 
     /**
