@@ -1,41 +1,48 @@
 package Pieces;
 
+import Main.Board;
 import javafx.scene.image.Image;
 
 public class Pawn extends Piece {
 
-    public Pawn(int x, int y, boolean isWhite) {
-        super(x, y, isWhite);
+    public Pawn(int x, int y, boolean isWhite, Board board) {
+        super(x, y, isWhite, board);
     }
 
     public boolean isValidMove(int newX, int newY) {
-        int direction;
-        int dx = Math.abs(x - newX);
-        int sdy = newY - y;
-        int doubleMoveSquare;
+        final int dir = isWhite ? -1 : 1;
 
-        if (!inBounds(newX, newY) || dx > 1) {
+        if (!inBounds(newX, newY)) {
             return false;
         }
 
-        if (isWhite) {
-            direction = 1;
-            doubleMoveSquare = 1;
-        } else {
-            direction = -1;
-            doubleMoveSquare = Constants.SIZE - 2;
-        }
-
-        // one square moved
-        if (sdy == direction) {
+        if ((y + dir == newY) && (x == newX) && board.getPiece(newX, newY) == null) {
             return true;
         }
-        // two squares moved.
-        if (dx == 0 && y + 2 * direction == newY && y == doubleMoveSquare) {
+
+        if ((y + 2 * dir == newY) && (x == newX) && isFirstMove && board.getPiece(newX, newY) == null
+                && board.getPiece(newX, newY - dir) == null) {
             return true;
         }
-        // dx == 1
 
+        if ((y + dir == newY) && (x == newX - 1) && (board.getPiece(newX, newY) != null)) {
+            return true;
+        }
+
+        if ((y + dir == newY) && (x == newX + 1) && (board.getPiece(newX, newY) != null)) {
+            return true;
+        }
+
+        if (board.getEnPassantSquare() == board.getTileNum(newX, newY) && Math.abs(newX - x) == 1 && (newY - y == dir)
+                && board.getPiece(newX, newY - dir) != null) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    public boolean moveCollides(int newX, int newY) {
         return false;
     }
 

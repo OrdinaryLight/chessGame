@@ -1,3 +1,5 @@
+package Main;
+
 import javafx.scene.shape.Rectangle;
 
 //////////
@@ -15,6 +17,10 @@ public class viLitTile extends Rectangle {
         setFill(Constants.LIT1);
         setOpacity(Constants.LIT_OPACITY);
         setVisible(false);
+    }
+
+    public void activate(boolean isOn) {
+        setVisible(isOn);
     }
 
 }

@@ -12,7 +12,7 @@
                 "./lib/javafx-sdk-23.0.1/lib", // JavaFX modules
                 "--add-modules",
                 "javafx.controls", // Add JavaFX controls module
-                "src/*.java", // Compile all Java files in src
+                "src/Main/*.java", // Compile all Java files in src
                 "src/Pieces/*.java",
             ],
             "group": {

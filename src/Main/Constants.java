@@ -1,3 +1,5 @@
+package Main;
+
 import javafx.scene.paint.Color;
 
 public final class Constants {
@@ -70,5 +72,9 @@ public final class Constants {
     public static final Color WHITE1 = Color.WHITESMOKE;
     public static final Color BLACK1 = Color.GRAY;
     public static final Color LIT1 = Color.rgb(0, 128, 196);
+
+    public static int pixelToBoard(double x) {
+        return (int) (x / TILE_SIZE);
+    }
 
 }

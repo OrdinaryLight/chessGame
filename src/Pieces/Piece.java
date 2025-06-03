@@ -1,5 +1,6 @@
 package Pieces;
 
+import Main.Board;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -14,11 +15,15 @@ public abstract class Piece extends StackPane {
     int y; // Y coordinate
     boolean isWhite; // color of Piece
     ImageView image; // image associated with Piece
+    Board board; // the board
+    boolean isFirstMove;
 
-    public Piece(int x, int y, boolean isWhite) {
+    public Piece(int x, int y, boolean isWhite, Board board) {
         this.x = x;
         this.y = y;
         this.isWhite = isWhite;
+        this.board = board;
+        this.isFirstMove = true;
 
         image = new ImageView();
         image.setImage(getImage());
@@ -36,6 +41,15 @@ public abstract class Piece extends StackPane {
      * @return whether or not a move is possible
      */
     public abstract boolean isValidMove(int newX, int newY);
+
+    /**
+     * 
+     * 
+     * @param newX
+     * @param newY
+     * @return
+     */
+    public abstract boolean moveCollides(int newX, int newY);
 
     /**
      * gets the image associated with that piece
@@ -118,6 +132,10 @@ public abstract class Piece extends StackPane {
     public void relocatePiece(int x, int y) {
         relocate(Constants.X_OFFSET + x * Constants.TILE_SIZE,
                 Constants.Y_OFFSET + y * Constants.TILE_SIZE);
+    }
+
+    public void hasMoved() {
+        isFirstMove = false;
     }
 
 }
