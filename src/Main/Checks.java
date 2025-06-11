@@ -117,4 +117,19 @@ public class Checks {
         return piece != null && piece.isWhite() != king.isWhite() && piece instanceof Pawn;
     }
 
+    public boolean isGameOver(Piece king) {
+        for (Piece p : board.pieces) {
+            if (board.isSameTeam(p, king)) {
+                for (int x = 0; x < Constants.SIZE; x++) {
+                    for (int y = 0; y < Constants.SIZE; y++) {
+                        if (board.isValidMove(new Move(board, p, x, y))) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
 }

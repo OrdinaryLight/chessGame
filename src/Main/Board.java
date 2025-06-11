@@ -21,18 +21,43 @@ import javafx.scene.layout.Pane;
 /// ***Seperating some logic out may be helpful.
 /// 
 public class Board {
-    Group tileGroup = new Group();
-    Group litSquaresGroup = new Group();
-    viLitTile litSquaresBoard[][] = new viLitTile[Constants.SIZE][Constants.SIZE];
-    Group pieceGroup = new Group();
-    viBorder border = new viBorder();
-    Pane board = new Pane();
-    ArrayList<Piece> pieces = new ArrayList<Piece>();
-    ArrayList<viLitTile> litSquares = new ArrayList<viLitTile>();
+    Group tileGroup;
+    Group litSquaresGroup;
+    viLitTile litSquaresBoard[][];
+    Group pieceGroup;
+    viBorder border;
+    Pane board;
+    ArrayList<viLitTile> litSquares;
+    // ^^^ visuals
+
+    ArrayList<Piece> pieces;
     int enPassantSquare;
     Checks checkChecker;
+    // ^^ logics
 
     public Board() {
+        this.tileGroup = new Group();
+        this.litSquaresGroup = new Group();
+        this.litSquaresBoard = new viLitTile[Constants.SIZE][Constants.SIZE];
+        this.pieceGroup = new Group();
+        this.border = new viBorder();
+        this.litSquares = new ArrayList<viLitTile>();
+        this.pieces = new ArrayList<Piece>();
+
+        this.board = makeBoard();
+        this.enPassantSquare = -1;
+        this.checkChecker = new Checks(this);
+    }
+
+    public void reset() {
+        this.tileGroup = new Group();
+        this.litSquaresGroup = new Group();
+        this.litSquaresBoard = new viLitTile[Constants.SIZE][Constants.SIZE];
+        this.pieceGroup = new Group();
+        this.border = new viBorder();
+        this.litSquares = new ArrayList<viLitTile>();
+        this.pieces = new ArrayList<Piece>();
+
         this.board = makeBoard();
         this.enPassantSquare = -1;
         this.checkChecker = new Checks(this);
@@ -137,16 +162,6 @@ public class Board {
                 if (isValidMove(new Move(this, piece, i, j))) {
                     litSquaresBoard[j][i].activate(true);
                     litSquares.add(litSquaresBoard[j][i]);
-                }
-                if (piece.getX() == i && piece.getY() == j) {
-                    if (isValidMove(new Move(this, piece, i, j))) {
-                        System.out.println("ol");
-                        System.out.println(i + " " + j);
-                    } else {
-                        System.out.println("better");
-                        System.out.println(i + " " + j);
-
-                    }
                 }
 
             }

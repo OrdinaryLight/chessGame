@@ -7,7 +7,6 @@ import javafx.scene.layout.StackPane;
 
 //////////
 /// Class represents a Piece in chess
-///*Used as such
 /// 
 /// 
 public abstract class Piece extends StackPane {

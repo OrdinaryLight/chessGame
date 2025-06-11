@@ -7,10 +7,12 @@ import Pieces.Piece;
 public class Input {
     private Board board;
     private boolean isWhiteTurn;
+    private App app;
 
-    Input(Board board, boolean isWhiteTurn) {
+    Input(Board board, boolean isWhiteTurn, App app) {
         this.board = board;
         this.isWhiteTurn = isWhiteTurn;
+        this.app = app;
         setUpPieces();
     }
 
@@ -35,8 +37,10 @@ public class Input {
      * @param piece the Piece
      */
     private void doOnMousePressed(Piece piece) {
-        piece.setOnMousePressed(e -> {
-            board.activateLitSquares(piece);
+        piece.setOnMousePressed(_ -> {
+            if (isWhiteTurn == piece.isWhite()) {
+                board.activateLitSquares(piece);
+            }
         });
     }
 
@@ -79,14 +83,25 @@ public class Input {
             final int newY = boardSnapY(e.getSceneX(), e.getSceneY()) - 1;
             final Move move = new Move(board, piece, Constants.pixelToBoard(newX), Constants.pixelToBoard(newY));
 
-            if (board.isValidMove(move)) {
+            if (board.isValidMove(move) && isWhiteTurn == piece.isWhite()) {
                 piece.relocatePiece(Constants.pixelToBoard(newX), Constants.pixelToBoard(newY));
                 board.makeMove(move);
+                afterMoveLogic(move);
             } else {
-                piece.relocatePiece(piece.getX(), piece.getY()); // relocate piece is bad for some reason
+                piece.relocatePiece(piece.getX(), piece.getY());
             }
         });
 
+    }
+
+    private void afterMoveLogic(Move move) {
+        isWhiteTurn = !move.piece.isWhite();
+
+        if (board.checkChecker.isGameOver(board.getKing(isWhiteTurn))) {
+            app.checkMate();
+            System.out.print("mate");
+        }
+        ;
     }
 
 }
