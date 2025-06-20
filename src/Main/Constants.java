@@ -48,6 +48,19 @@ public final class Constants {
             DO_FORWARD_PAWNS,
             DO_CHECK_MULTIPLIER, DO_PROMOTION_MULTIPLIER, DO_MATERIAL_DIFFERENCE, DO_WHITE_AI, DO_BLACK_AI };
 
+    public static String[] aiRulesNames = {
+            "Center Pawns",
+            "Do En Passant Moves",
+            "Center Knights",
+            "Per Bishop Move",
+            "Forward Pawns",
+            "Check Multiplier",
+            "Promotion Multiplier",
+            "Material Difference",
+            "White AI Enabled",
+            "Black AI Enabled"
+    };
+
     // ai rules values
     public static final int CENTER_PAWN_VALUE = 2;
     public static final int ENPASSANT_POINTS = 10000000;

@@ -15,14 +15,14 @@ public abstract class Piece extends StackPane {
     boolean isWhite; // color of Piece
     ImageView image; // image associated with Piece
     Board board; // the board
-    boolean isFirstMove;
+    int isFirstMove;
 
     public Piece(int x, int y, boolean isWhite, Board board) {
         this.x = x;
         this.y = y;
         this.isWhite = isWhite;
         this.board = board;
-        this.isFirstMove = true;
+        this.isFirstMove = 0;
 
         image = new ImageView();
         image.setImage(getImage());
@@ -134,7 +134,11 @@ public abstract class Piece extends StackPane {
     }
 
     public void hasMoved() {
-        isFirstMove = false;
+        isFirstMove++;
+    }
+
+    public void hasntMoved() {
+        isFirstMove--;
     }
 
 }

@@ -9,17 +9,19 @@ import javafx.stage.Stage;
 /// *Used as such
 /// 
 public class App extends Application {
-    public Board board = new Board();
+    public Board board;
     private boolean isWhiteTurn = true;
     private Stage stage;
-    private Input input = new Input(board, isWhiteTurn, this);
     private Scene gameScene;
+    public Input input;
 
     public void start(Stage primaryStage) {
         stage = primaryStage;
+        board = new Board();
         gameScene = new Scene(board.board);
+        input = new Input(board, isWhiteTurn, this);
         stage.setTitle("Chess Game");
-        stage.setScene(gameScene);
+        stage.setScene(new Menu(this));
         stage.show();
     }
 
@@ -27,10 +29,16 @@ public class App extends Application {
         launch(args);
     }
 
+    public void start() {
+        stage.setTitle("Chess Game");
+        stage.setScene(gameScene);
+        stage.show();
+    }
+
     public void restart() {
-        // board.reset();
         board = new Board();
         gameScene = new Scene(board.board);
+        input = new Input(board, isWhiteTurn, this);
         stage.setTitle("Chess Game");
         stage.setScene(gameScene);
         stage.show();

@@ -20,7 +20,7 @@ public class Pawn extends Piece {
             return true;
         }
 
-        if ((y + 2 * dir == newY) && (x == newX) && isFirstMove && board.getPiece(newX, newY) == null
+        if ((y + 2 * dir == newY) && (x == newX) && isFirstMove == 0 && board.getPiece(newX, newY) == null
                 && board.getPiece(newX, newY - dir) == null) {
             return true;
         }
