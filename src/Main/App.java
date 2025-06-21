@@ -1,5 +1,6 @@
 package Main;
 
+import Pieces.Piece;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -17,7 +18,7 @@ public class App extends Application {
 
     public void start(Stage primaryStage) {
         stage = primaryStage;
-        board = new Board();
+        board = new Board(this);
         gameScene = new Scene(board.board);
         input = new Input(board, isWhiteTurn, this);
         stage.setTitle("Chess Game");
@@ -36,7 +37,7 @@ public class App extends Application {
     }
 
     public void restart() {
-        board = new Board();
+        board = new Board(this);
         gameScene = new Scene(board.board);
         input = new Input(board, isWhiteTurn, this);
         stage.setTitle("Chess Game");
@@ -47,6 +48,10 @@ public class App extends Application {
     public void checkMate() {
         stage.setScene(new CheckMateScene(this));
         stage.show();
+    }
+
+    public void addPiece(Piece piece) {
+        input.addPiece(piece);
     }
 
 }

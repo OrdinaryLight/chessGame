@@ -31,11 +31,13 @@ public class Board {
     // ^^^ visuals
 
     ArrayList<Piece> pieces;
+    App app;
     int enPassantSquare;
     Checks checkChecker;
+    boolean justPromoted;
     // ^^ logics
 
-    public Board() {
+    public Board(App app) {
         this.tileGroup = new Group();
         this.litSquaresGroup = new Group();
         this.litSquaresBoard = new viLitTile[Constants.SIZE][Constants.SIZE];
@@ -47,6 +49,8 @@ public class Board {
         this.board = makeBoard();
         this.enPassantSquare = -1;
         this.checkChecker = new Checks(this);
+        this.justPromoted = false;
+        this.app = app;
     }
 
     public void reset() {
@@ -203,6 +207,7 @@ public class Board {
     }
 
     public void makeMove(Move move) {
+        justPromoted = false;
 
         if (move.piece instanceof Pawn) {
             movePawn(move);
@@ -232,6 +237,8 @@ public class Board {
         capture(pawn);
         pieceGroup.getChildren().add(queen);
         pieces.add(queen);
+        justPromoted = true;
+        app.addPiece(queen);
 
     }
 
@@ -248,14 +255,15 @@ public class Board {
             enPassantSquare = -1;
         }
 
-        if (move.piece.isWhite() && move.newY == 0 || !move.piece.isWhite() && move.newY == 7) {
-            promotePawn(move.piece);
-        }
-
         move.piece.setX(move.newX);
         move.piece.setY(move.newY);
         move.piece.hasMoved();
         capture(move.capturedPiece);
+
+        if (move.piece.isWhite() && move.newY == 0 || !move.piece.isWhite() && move.newY == 7) {
+            promotePawn(move.piece);
+        }
+
     }
 
     private void moveKing(Move move) {

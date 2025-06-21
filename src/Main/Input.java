@@ -31,6 +31,12 @@ public class Input {
         }
     }
 
+    public void addPiece(Piece p) {
+        doOnMousePressed(p);
+        doOnMouseDragged(p);
+        doOnMouseReleased(p);
+    }
+
     /**
      * when mouse is pressed do some checks and activate squares that are movable to
      * 

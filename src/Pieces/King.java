@@ -37,12 +37,12 @@ public class King extends Piece {
 
         if (x == 6) {
             rook = board.getPiece(7, y);
-            return rook != null && rook.isFirstMove && isFirstMove && board.getPiece(5, y) == null
+            return rook != null && rook.isFirstMove == 0 && isFirstMove == 0 && board.getPiece(5, y) == null
                     && board.getPiece(6, y) == null
                     && !board.getCheckChecker().isKingChecked(new Move(board, rook, 5, y));
         } else if (x == 2) {
             rook = board.getPiece(0, y);
-            return rook != null && rook.isFirstMove && isFirstMove && board.getPiece(3, y) == null
+            return rook != null && rook.isFirstMove == 0 && isFirstMove == 0 && board.getPiece(3, y) == null
                     && board.getPiece(2, y) == null
                     && board.getPiece(1, y) == null
                     && !board.getCheckChecker().isKingChecked(new Move(board, rook, 3, y));
