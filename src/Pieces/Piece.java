@@ -1,6 +1,7 @@
 package Pieces;
 
 import Main.Board;
+import javafx.application.Platform;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -73,6 +74,7 @@ public abstract class Piece extends StackPane {
      */
     public void setX(int x) {
         this.x = x;
+        relocatePiece(x, y);
     }
 
     /**
@@ -91,6 +93,8 @@ public abstract class Piece extends StackPane {
      */
     public void setY(int y) {
         this.y = y;
+        relocatePiece(x, y);
+
     }
 
     /**
@@ -129,8 +133,11 @@ public abstract class Piece extends StackPane {
      * @param y board coordinate Y
      */
     public void relocatePiece(int x, int y) {
-        relocate(Constants.X_OFFSET + x * Constants.TILE_SIZE,
-                Constants.Y_OFFSET + y * Constants.TILE_SIZE);
+        Platform.runLater(() -> {
+            relocate(Constants.X_OFFSET + x * Constants.TILE_SIZE,
+                    Constants.Y_OFFSET + y * Constants.TILE_SIZE);
+
+        });
     }
 
     public void hasMoved() {

@@ -34,6 +34,8 @@ public class App extends Application {
         stage.setTitle("Chess Game");
         stage.setScene(gameScene);
         stage.show();
+
+        input.doAiMove();
     }
 
     public void restart() {
@@ -52,6 +54,13 @@ public class App extends Application {
 
     public void addPiece(Piece piece) {
         input.addPiece(piece);
+    }
+
+    public void render() {
+        if (stage.getScene() != null) {
+            stage.getScene().getRoot().applyCss();
+            stage.getScene().getRoot().autosize();
+        }
     }
 
 }

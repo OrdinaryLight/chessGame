@@ -23,25 +23,25 @@ public final class Constants {
 
     // ai rules
 
-    public static final boolean DO_CENTER_PAWNS = true; // 0
+    public static final boolean DO_CENTER_PAWNS = false; // 0
     public static final int DO_CENTER_PAWNS_IDX = 0;
-    public static final boolean DO_ENPASSANTS = true; // 1
+    public static final boolean DO_ENPASSANTS = false; // 1
     public static final int DO_ENPASSANTS_IDX = 1;
-    public static final boolean DO_CENTER_KNIGHTS = true; // 2
+    public static final boolean DO_CENTER_KNIGHTS = false; // 2
     public static final int DO_CENTER_KNIGHTS_IDX = 2;
-    public static final boolean DO_PER_BISHOP_MOVE = true; // 3
+    public static final boolean DO_PER_BISHOP_MOVE = false; // 3
     public static final int DO_PER_BISHOP_MOVE_IDX = 3;
-    public static final boolean DO_FORWARD_PAWNS = true; // 4
+    public static final boolean DO_FORWARD_PAWNS = false; // 4
     public static final int DO_FORWARD_PAWNS_IDX = 4;
-    public static final boolean DO_CHECK_MULTIPLIER = true; // 5
+    public static final boolean DO_CHECK_MULTIPLIER = false; // 5
     public static final int DO_CHECK_MULTIPLIER_IDX = 5;
-    public static final boolean DO_PROMOTION_MULTIPLIER = true; // 6
+    public static final boolean DO_PROMOTION_MULTIPLIER = false; // 6
     public static final int DO_PROMOTION_MULTIPLIER_IDX = 6;
-    public static final boolean DO_MATERIAL_DIFFERENCE = true; // 7
+    public static final boolean DO_MATERIAL_DIFFERENCE = false; // 7
     public static final int DO_MATERIAL_DIFFERENCE_IDX = 7;
-    public static final boolean DO_WHITE_AI = true;
+    public static final boolean DO_WHITE_AI = false; // 8
     public static final int DO_WHITE_AI_IDX = 8;
-    public static final boolean DO_BLACK_AI = true;
+    public static final boolean DO_BLACK_AI = false; // 9
     public static final int DO_BLACK_AI_IDX = 9;
 
     public static boolean[] aiRules = { DO_CENTER_PAWNS, DO_ENPASSANTS, DO_CENTER_KNIGHTS, DO_PER_BISHOP_MOVE,
