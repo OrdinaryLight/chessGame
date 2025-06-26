@@ -112,7 +112,7 @@ public class Input {
     }
 
     private void afterMoveLogic(Move move) {
-        if (board.checkChecker.isGameOver(board.getKing(isWhiteTurn))) {
+        if (board.checkChecker.isGameOver(board.getKing(!isWhiteTurn))) {
             app.checkMate();
             System.out.print("mate");
         }
@@ -128,9 +128,10 @@ public class Input {
             board.makeMove(move);
 
             final long timeElapsed = System.currentTimeMillis() - startTime;
-            final long remainingTime = 2000 - timeElapsed;
+            final long remainingTime = 50 - timeElapsed;
+            final long waitTime = remainingTime > 0 ? remainingTime : 0;
 
-            PauseTransition pause = new PauseTransition(Duration.millis(remainingTime));
+            PauseTransition pause = new PauseTransition(Duration.millis(waitTime));
             pause.setOnFinished(_ -> {
                 afterMoveLogic(move);
                 advanceTurn();

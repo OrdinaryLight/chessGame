@@ -254,7 +254,7 @@ public class Ai {
             if (p instanceof Pawn && p.isWhite() == isWhiteTurn) {
                 int advancement = 0;
                 if (isWhiteTurn) {
-                    advancement = Constants.SIZE - 6 - p.getY();
+                    advancement = Constants.SIZE - 2 - p.getY();
                 } else {
                     advancement = p.getY() - 1;
                 }
