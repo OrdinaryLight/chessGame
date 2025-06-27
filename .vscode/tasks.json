@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Java",
+            "type": "shell", // Use shell task type
+            "command": "javac", // The compiler command
+            "args": [
+                "-d",
+                "bin", // Specify the output directory
+                "--module-path",
+                "./lib/javafx-sdk-23.0.1/lib", // JavaFX modules
+                "--add-modules",
+                "javafx.controls", // Add JavaFX controls module
+                "src/Main/*.java", // Compile all Java files in src
+                "src/Pieces/*.java",
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true // Make this the default build task
+            },
+            "detail": "Generated task to build Java code"
+        }
+    ]
+}
